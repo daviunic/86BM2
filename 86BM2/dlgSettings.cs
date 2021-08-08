@@ -5,7 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-namespace _86boxManager
+namespace _86BM2
 {
     public partial class dlgSettings : Form
     {

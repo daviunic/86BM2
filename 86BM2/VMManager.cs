@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace _86boxManager
+namespace _86BM2
 {
     public static class VMManager
     {
@@ -14,10 +14,9 @@ namespace _86boxManager
             Running = 1,
             Waiting = 2,
             Paused  = 3,
-            Unknown = 4
         }
 
-        public static string vmListDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "86BoxManager");
+        public static string vmListDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "86BM2");
         public static string vmListFile = Path.Combine(vmListDir, "vmlist.json");
         public const string ZEROID = "0000000000000000"; //Used for the ID parameter of 86Box -H
 
@@ -36,6 +35,44 @@ namespace _86boxManager
             foreach(VirtualMachine vm in VMs)
             {
                 if (vm.Guid == Guid)
+                    return vm;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the VM with the specified process ID, if it exists.
+        /// </summary>
+        /// <param name="Pid">The process ID of the VM to return. Must be more than 0.</param>
+        /// <returns>The VM with the specified process ID if it exists, otherwise null.</returns>
+        public static VirtualMachine Get(int Pid)
+        {
+            if (Pid <= 0)
+                return null;
+
+            foreach (VirtualMachine vm in VMs)
+            {
+                if (vm.ProcessID == Pid)
+                    return vm;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the VM with the specified window handle, if it exists.
+        /// </summary>
+        /// <param name="Handle">The window handle of the VM to return. Must not be a zero pointer.</param>
+        /// <returns>The VM with the specified window handle if it exists, otherwise null.</returns>
+        public static VirtualMachine Get(IntPtr Handle)
+        {
+            if (Handle == IntPtr.Zero)
+                return null;
+
+            foreach (VirtualMachine vm in VMs)
+            {
+                if (vm.Handle == Handle)
                     return vm;
             }
 
@@ -80,6 +117,20 @@ namespace _86boxManager
             VMs.Clear();
 
             //Also write the change to vmlist.json file!
+        }
+
+        /// <summary>
+        /// Forces all running VMs to stop.
+        /// </summary>
+        public static void ForceStopAll()
+        {
+            foreach(VirtualMachine vm in VMs)
+            {
+                if(vm.State != VMState.Stopped)
+                {
+                    vm.ForceStop();
+                }
+            }
         }
 
         /// <summary>

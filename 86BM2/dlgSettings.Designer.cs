@@ -1,4 +1,4 @@
-﻿namespace _86boxManager
+﻿namespace _86BM2
 {
     partial class dlgSettings
     {
@@ -475,7 +475,7 @@
             // 
             // imgLogo
             // 
-            this.imgLogo.Image = global::_86boxManager.Properties.Resources._86Box;
+            this.imgLogo.Image = global::_86BM2.Properties.Resources._86Box;
             this.imgLogo.Location = new System.Drawing.Point(15, 14);
             this.imgLogo.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.imgLogo.Name = "imgLogo";

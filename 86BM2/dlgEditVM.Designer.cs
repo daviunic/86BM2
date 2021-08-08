@@ -1,4 +1,4 @@
-﻿namespace _86boxManager
+﻿namespace _86BM2
 {
     partial class dlgEditVM
     {

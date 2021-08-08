@@ -2,9 +2,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using static _86boxManager.VMManager;
+using System.Windows.Forms;
+using static _86BM2.VMManager;
 
-namespace _86boxManager
+namespace _86BM2
 {
     public class VirtualMachine
     {
@@ -69,9 +70,11 @@ namespace _86boxManager
         {
             if (State == VMState.Stopped)
             {
+                frmMain mainForm = (frmMain)Application.OpenForms["frmMain"]; //Instance of frmMain
+
                 Process p = new Process();
-                p.StartInfo.FileName = exepath + "86Box.exe";
-                p.StartInfo.Arguments = $"-P \"{Path}\" -H {ZEROID},{hWndHex}";
+                p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
+                p.StartInfo.Arguments = $"-P \"{Path}\" -H {ZEROID},{mainForm.handle}";
 
                 if (EnableLogging)
                 {
@@ -195,9 +198,11 @@ namespace _86boxManager
             }
             else if (State == VMState.Stopped)
             {
+                frmMain mainForm = (frmMain)Application.OpenForms["frmMain"]; //Instance of frmMain
+
                 Process p = new Process();
-                p.StartInfo.FileName = System.IO.Path.Combine(exepath, "86Box.exe");
-                p.StartInfo.Arguments = $"-S -P \"{Path}\" -H {ZEROID},{hWndHex}";
+                p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
+                p.StartInfo.Arguments = $"-S -P \"{Path}\" -H {ZEROID},{mainForm.handle}";
 
                 if (EnableLogging)
                 {

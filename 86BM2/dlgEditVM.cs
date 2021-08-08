@@ -2,7 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 
-namespace _86boxManager
+namespace _86BM2
 {
     public partial class dlgEditVM : Form
     {
@@ -17,17 +17,17 @@ namespace _86boxManager
 
         private void dlgEditVM_Load(object sender, EventArgs e)
         {
-            VMLoadData();
+            //VMLoadData();
         }
 
         //Load the data for selected VM
         private void VMLoadData()
         {
-            vm = (VirtualMachine)main.lstVMs.FocusedItem.Tag;
+            /*vm = (VirtualMachine)main.lstVMs.FocusedItem.Tag;
             originalName = vm.Name;
             txtName.Text = vm.Name;
             txtDesc.Text = vm.Desc;
-            lblPath1.Text = vm.Path;
+            lblPath1.Text = vm.Path;*/
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace _86boxManager
+namespace _86BM2
 {
     internal static class Interop
     {

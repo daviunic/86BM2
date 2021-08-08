@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("86Box Manager")]
+[assembly: AssemblyTitle("86BM2")]
 [assembly: AssemblyDescription("A configuration manager for 86Box emulator")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("David Simunič and others")]
-[assembly: AssemblyProduct("86Box Manager")]
-[assembly: AssemblyCopyright("Copyright © 2018-2020 David Simunič and others")]
+[assembly: AssemblyProduct("86BM2")]
+[assembly: AssemblyCopyright("Copyright © 2018-2021 David Simunič and others")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 
-[assembly: AssemblyVersion("1.7.3.0")]
-[assembly: AssemblyFileVersion("1.7.3.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]

@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<RootNamespace>_86BM2</RootNamespace>
+    <AssemblyName>86BM2</AssemblyName>
+    <StartupObject>_86BM2.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="dlgSettings.Designer.cs~RF2bb8c790.TMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="dlgAddVM.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dlgAddVM.Designer.cs">
+      <DependentUpon>dlgAddVM.cs</DependentUpon>
+    </Compile>
+    <Compile Update="dlgCloneVM.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dlgCloneVM.Designer.cs">
+      <DependentUpon>dlgCloneVM.cs</DependentUpon>
+    </Compile>
+    <Compile Update="dlgEditVM.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dlgEditVM.Designer.cs">
+      <DependentUpon>dlgEditVM.cs</DependentUpon>
+    </Compile>
+    <Compile Update="dlgSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="dlgSettings.Designer.cs">
+      <DependentUpon>dlgSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Interop.cs" />
+    <Compile Update="ListViewItemComparer.cs" />
+    <Compile Update="VirtualMachine.cs" />
+    <Compile Update="frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Program.cs" />
+    <Compile Update="Properties\AssemblyInfo.cs" />
+    <Compile Update="VMManager.cs" />
+    <EmbeddedResource Update="dlgAddVM.resx">
+      <DependentUpon>dlgAddVM.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="dlgCloneVM.resx">
+      <DependentUpon>dlgCloneVM.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="dlgEditVM.resx">
+      <DependentUpon>dlgEditVM.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="dlgSettings.resx">
+      <DependentUpon>dlgSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="frmMain.resx">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Update="app.config" />
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+</Project>
