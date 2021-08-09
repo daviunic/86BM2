@@ -189,8 +189,6 @@ namespace _86BM2
             SaveSettings(true);
         }
 
-// .NET Core implements the better Vista-style folder browse dialog in the stock FolderBrowserDialog
-#if NETCOREAPP
         private void btnBrowse1_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog
@@ -228,44 +226,6 @@ namespace _86BM2
                 }
             }
         }
-// A custom class is required for Vista-style folder dialogs under the original .NET Framework
-#else
-        private void btnBrowse1_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dialog = new FolderSelectDialog
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "Select a folder where 86Box program files and the roms folder are located"
-            };
-
-            if (dialog.Show(Handle))
-            {
-                txtEXEdir.Text  = dialog.FileName;
-                if (!txtEXEdir.Text.EndsWith(@"\")) //Just in case
-                {
-                    txtEXEdir.Text += @"\";
-                }
-            }
-        }
-
-        private void btnBrowse2_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dialog = new FolderSelectDialog
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "Select a folder where your virtual machines (configs, nvr folders, etc.) will be located"
-            };
-
-            if (dialog.Show(Handle))
-            {
-                txtCFGdir.Text = dialog.FileName;
-                if (!txtCFGdir.Text.EndsWith(@"\")) //Just in case
-                {
-                    txtCFGdir.Text += @"\";
-                }
-            }
-        }
-#endif
 
         private void btnDefaults_Click(object sender, EventArgs e)
         {
