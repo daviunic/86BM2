@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using static _86BM2.Interop;
 using static _86BM2.VMManager;
@@ -43,6 +44,11 @@ namespace _86BM2
             ProcessID = -1;
             EnableLogging = false;
             LogPath = "";
+            DumpConfigFile = false;
+            EnableDebugOutput = false;
+            StartFullscreen = false;
+            NoQuitConfirmation = false;
+            EnableCrashDump = false;
 
             worker = new BackgroundWorker
             {
@@ -53,7 +59,8 @@ namespace _86BM2
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
-        public VirtualMachine(string name, string desc, string path, bool enableLogging, string logPath)
+        public VirtualMachine(string name, string desc, string path, bool enableLogging, string logPath, bool dumpConfig, bool enableDebug, 
+            bool startFullscreen, bool noQuitConfirm, bool enableCrashDump)
         {
             Random rand = new Random();
             Id = rand.Next();
@@ -69,6 +76,11 @@ namespace _86BM2
             ProcessID = -1;
             EnableLogging = enableLogging;
             LogPath = logPath;
+            DumpConfigFile = dumpConfig;
+            EnableDebugOutput = enableDebug;
+            StartFullscreen = startFullscreen;
+            NoQuitConfirmation = noQuitConfirm;
+            EnableCrashDump = enableCrashDump;
 
             worker = new BackgroundWorker
             {
@@ -80,9 +92,10 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Starts the VM
+        /// Starts the VM with the main window or with the settings window.
         /// </summary>
-        public void Start()
+        /// <param name="showSettings">If true, the VM will be started with the settings window, otherwise with the main window.</param>
+        public void Start(bool showSettings)
         {
             if (State == VMState.Stopped)
             {
@@ -90,17 +103,31 @@ namespace _86BM2
 
                 Process p = new Process();
                 p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
-                p.StartInfo.Arguments = $"-P \"{Path}\" -H {Id},{mainForm.handle}";
+
+                StringBuilder sb = new StringBuilder($"-P \"{Path}\" -H {Id},{mainForm.handle}");
 
                 if (EnableLogging)
-                    p.StartInfo.Arguments += $" -L \"{LogPath}\"";
+                    sb.Append($" -L \"{LogPath}\"");
+                if (DumpConfigFile)
+                    sb.Append(" -C");
+                if (EnableDebugOutput)
+                    sb.Append(" -D");
+                if (StartFullscreen)
+                    sb.Append(" -F");
+                if (NoQuitConfirmation)
+                    sb.Append(" -N");
+                if (EnableCrashDump)
+                    sb.Append(" -R");
+                if (showSettings)
+                    sb.Append(" -S");
 
+                p.StartInfo.Arguments = sb.ToString();
                 p.Start();
                 ProcessID = p.Id;
 
                 if (!p.MainWindowHandle.Equals(IntPtr.Zero))
                 {
-                    Handle = p.MainWindowHandle; //Get the window handle of the newly created process
+                    //Handle = p.MainWindowHandle; //Get the window handle of the newly created process
                     State = VMState.Running;
 
                     //Start the worker which will wait for the VM's window to close
@@ -110,14 +137,12 @@ namespace _86BM2
                         throw new Exception("The background worker for this VM is busy");
                 }
                 else
-                {
                     throw new Exception("86Box process failed to initialize");
-                }
             }
         }
 
         /// <summary>
-        /// Instructs a running VM to pause
+        /// Pauses a running VM.
         /// </summary>
         public void Pause()
         {
@@ -129,7 +154,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Instructs a paused VM to resume
+        /// Resumes a paused VM.
         /// </summary>
         public void Resume()
         {
@@ -141,7 +166,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Instructs the VM to stop by asking for user confirmation first and focuses its window
+        /// Stops a running or paused VM by asking for user confirmation first and focuses its window.
         /// </summary>
         public void RequestStop()
         {
@@ -153,7 +178,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Instructs the VM to stop without asking for user confirmation first
+        /// Stops a running or paused VM without asking for user confirmation first.
         /// </summary>
         public void ForceStop()
         {
@@ -162,7 +187,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Sends the CTRL+ALT+DELETE keystrokes to the VM
+        /// Sends the CTRL+ALT+DELETE keystrokes to the VM.
         /// </summary>
         public void SendCtrAltDel()
         {
@@ -174,7 +199,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Hard resets the VM by asking the user for confirmation first
+        /// Hard resets a running or paused VM by asking the user for confirmation first.
         /// </summary>
         public void HardReset()
         {
@@ -186,12 +211,13 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Kills the associated 86Box process for this VM
+        /// Kills the associated 86Box process for this VM.
         /// </summary>
         public void Kill()
         {
             Process p = Process.GetProcessById(ProcessID);
             p.Kill();
+            p.Close();
 
             State = VMState.Stopped;
             Handle = IntPtr.Zero;
@@ -199,7 +225,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Instructs the VM to open the Settings dialog, either standalone if the VM is stopped or as a modal if it's running
+        /// Instructs the VM to open the Settings dialog, either standalone if the VM is stopped or as a modal if it's running.
         /// </summary>
         public void Configure()
         {
@@ -209,39 +235,11 @@ namespace _86BM2
                 SetForegroundWindow(Handle);
             }
             else if (State == VMState.Stopped)
-            {
-                frmMain mainForm = (frmMain)Application.OpenForms["frmMain"]; //Instance of frmMain
-
-                Process p = new Process();
-                p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
-                p.StartInfo.Arguments = $"-S -P \"{Path}\" -H {Id},{mainForm.handle}";
-
-                if (EnableLogging)
-                    p.StartInfo.Arguments += $" -L \"{LogPath}\"";
-
-                p.Start();
-
-                if (!p.MainWindowHandle.Equals(IntPtr.Zero))
-                {
-                    State = VMState.Waiting;
-                    Handle = p.MainWindowHandle;
-                    ProcessID = p.Id;
-
-                    //Start the worker which will wait for the VM's window to close
-                    if (!worker.IsBusy)
-                        worker.RunWorkerAsync(ProcessID);
-                    else
-                        throw new Exception("The background worker for this VM is busy");
-                }
-                else
-                {
-                    throw new Exception("86Box process failed to initialize");
-                }
-            }
+                Start(true);
         }
 
         /// <summary>
-        /// Wipes the VM's config file and NVR folder
+        /// Wipes the VM's config file and NVR folder.
         /// </summary>
         public void Wipe()
         {
@@ -250,7 +248,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Opens the VM's folder in File Explorer
+        /// Opens the VM's folder in File Explorer.
         /// </summary>
         public void OpenFolder()
         {
@@ -258,7 +256,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Instructs the shell to attempt to open the config file in the associated program, if there is one
+        /// Instructs the shell to attempt to open the config file in the associated program, if there is one.
         /// </summary>
         public void OpenConfig()
         {
@@ -266,7 +264,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Opens the VM's screenshots folder in File Explorer
+        /// Opens the VM's screenshots folder in File Explorer.
         /// </summary>
         public void OpenScreenshotsFolder()
         {
@@ -279,7 +277,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Opens the VM's printer output folder in File Explorer
+        /// Opens the VM's printer output folder in File Explorer.
         /// </summary>
         public void OpenPrinterFolder()
         {
@@ -292,7 +290,7 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Opens the VM's nvr folder in File Explorer
+        /// Opens the VM's nvr folder in File Explorer.
         /// </summary>
         public void OpenNvrFolder()
         {
@@ -312,6 +310,9 @@ namespace _86BM2
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Waits for the associated process to exit.
+        /// </summary>
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             int ProcessID = (int)e.Argument;
@@ -320,6 +321,7 @@ namespace _86BM2
                 //Finds the 86Box process associated with the VM and waits for it to exit
                 Process p = Process.GetProcessById(ProcessID);
                 p.WaitForExit();
+                p.Close();
             }
             catch (Exception)
             {
@@ -327,6 +329,9 @@ namespace _86BM2
             }
         }
 
+        /// <summary>
+        /// Updates the VM state when the associated process exits.
+        /// </summary>
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null) 

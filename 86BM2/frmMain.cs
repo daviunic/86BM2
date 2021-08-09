@@ -19,7 +19,6 @@ namespace _86BM2
         private bool showConsole = true; //Show the console window when a VM is started?
         private bool minimizeTray = false; //Minimize the Manager window to tray icon?
         private bool closeTray = false; //Close the Manager Window to tray icon?
-        private const string ZEROID = "0000000000000000"; //Used for the id parameter of 86Box -H
         private int sortColumn = 0; //The column for sorting
         private SortOrder sortOrder = SortOrder.Ascending; //Sorting order
         private int launchTimeout = 5000; //Timeout for waiting for 86Box.exe to initialize
@@ -61,7 +60,7 @@ namespace _86BM2
 
                 //Then select and start it if it's found
                 if (vm != null)
-                    vm.Start();   
+                    vm.Start(false);   
                 else
                     MessageBox.Show("The virtual machine with the ID \"" + Program.args[2] + "\" could not be found. It may have been removed or the specified ID is incorrect.", "Virtual machine not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -73,7 +72,7 @@ namespace _86BM2
             {
                 VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Stopped)
-                    vm.Start();
+                    vm.Start(false);
                 else if (vm.State == VMState.Running)
                     vm.RequestStop();
                 else if(vm.State == VMState.Paused)
@@ -494,7 +493,7 @@ namespace _86BM2
         {
             VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
             if (vm.State == VMState.Stopped)
-                vm.Start();
+                vm.Start(false);
             else if (vm.State == VMState.Running)
                 vm.RequestStop();
             else if(vm.State == VMState.Paused)
@@ -641,9 +640,9 @@ namespace _86BM2
                 {
                     VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
                     if (vm.State == VMState.Stopped)
-                        vm.Start();
+                        vm.Start(false);
                     else if (vm.State == VMState.Running || vm.State == VMState.Paused || vm.State == VMState.Waiting)
-                        _ = SetForegroundWindow(vm.Handle);
+                        SetForegroundWindow(vm.Handle);
                 }
             }
         }
@@ -1112,7 +1111,7 @@ namespace _86BM2
 
         }
 
-        //Starts/stops selected VMs when Enter is pressed, or deletes them if Delete is pressed
+        //Starts/focuses selected VMs when Enter is pressed, or deletes them if Delete is pressed
         private void lstVMs_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -1120,15 +1119,10 @@ namespace _86BM2
                 foreach (ListViewItem lvi in lstVMs.SelectedItems)
                 {
                     VirtualMachine vm = GetById((int)lvi.Tag);
-                    if (vm.State == VMState.Running)
-                        vm.RequestStop();
+                    if (vm.State == VMState.Running || vm.State == VMState.Paused || vm.State == VMState.Waiting)
+                        SetForegroundWindow(vm.Handle);
                     else if (vm.State == VMState.Stopped)
-                        vm.Start();
-                    else if(vm.State == VMState.Paused)
-                    {
-                        vm.Resume();
-                        vm.RequestStop();
-                    }
+                        vm.Start(false);
                 }
             }
             if (e.KeyCode == Keys.Delete)
@@ -1213,64 +1207,6 @@ namespace _86BM2
             ds.Dispose();
         }
 
-        //Kills the process associated with the selected VM
-        private void VMKill()
-        {
-            /*foreach (ListViewItem lvi in lstVMs.SelectedItems)
-            {
-                VirtualMachine vm = (VirtualMachine)lvi.Tag;
-
-                //Ask the user to confirm
-                DialogResult = MessageBox.Show("Killing a virtual machine can cause data loss. Only do this if 86Box.exe process gets stuck.\n\nDo you really wish to kill the virtual machine \"" + vm.Name + "\"?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (DialogResult == DialogResult.Yes)
-                {
-                    try
-                    {
-                        Process p = Process.GetProcessById(vm.Pid);
-                        p.Kill();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Could not kill 86Box.exe process for virtual machine \"" + vm.Name + "\". The process may have already ended on its own or access was denied.", "Could not kill process", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        continue;
-                    }
-
-                    //We need to cleanup afterwards to make sure the VM is put back into a valid state
-                    vm.Status = VirtualMachine.STATUS_STOPPED;
-                    vm.hWnd = IntPtr.Zero;
-                    lstVMs.SelectedItems[0].SubItems[1].Text = vm.GetStatusString();
-                    lstVMs.SelectedItems[0].ImageIndex = 0;
-
-                    btnStartStop.Text = "Start";
-                    toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
-                    btnPauseResume.Text = "Pause";
-                    if (lstVMs.SelectedItems.Count > 0)
-                    {
-                        btnEdit.Enabled = true;
-                        btnDelete.Enabled = true;
-                        btnStartStop.Enabled = true;
-                        btnConfigure.Enabled = true;
-                        btnPauseResume.Enabled = false;
-                        btnReset.Enabled = false;
-                        btnCtrlAltDel.Enabled = false;
-                    }
-                    else
-                    {
-                        btnEdit.Enabled = false;
-                        btnDelete.Enabled = false;
-                        btnStartStop.Enabled = false;
-                        btnConfigure.Enabled = false;
-                        btnPauseResume.Enabled = false;
-                        btnReset.Enabled = false;
-                        btnCtrlAltDel.Enabled = false;
-                    }
-                }
-            }
-
-            VMSort(sortColumn, sortOrder);
-            VMCountRefresh();*/
-        }
-
         private void killToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
@@ -1279,6 +1215,8 @@ namespace _86BM2
                 if(vm.State != VMState.Stopped)
                     vm.Kill();
             }
+
+            VMCountRefresh();
         }
 
         //Sort the VM list by specified column and order
@@ -1340,40 +1278,8 @@ namespace _86BM2
             {
                 VirtualMachine vm = GetById((int)lvi.Tag);
                 if(vm.State == VMState.Stopped)
-                {
                     vm.Wipe();
-                }
             }
-        }
-
-        //Deletes the config and nvr of selected VM
-        private void VMWipe()
-        {
-            /*foreach (ListViewItem lvi in lstVMs.SelectedItems)
-            {
-                VirtualMachine vm = (VirtualMachine)lvi.Tag;
-
-                DialogResult = MessageBox.Show("Wiping a virtual machine deletes its configuration and nvr files. You'll have to reconfigure the virtual machine (and the BIOS if applicable).\n\n Are you sure you wish to wipe the virtual machine \"" + vm.Name + "\"?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (DialogResult == DialogResult.Yes)
-                {
-                    if (vm.State != VMState.Stopped)
-                    {
-                        MessageBox.Show("The virtual machine \"" + vm.Name + "\" is currently running and cannot be wiped. Please stop virtual machines before attempting to wipe them.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        continue;
-                    }
-                    try
-                    {
-                        System.IO.File.Delete(vm.Path + @"\86box.cfg");
-                        Directory.Delete(vm.Path + @"\nvr", true);
-                        MessageBox.Show("The virtual machine \"" + vm.Name + "\" was successfully wiped.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("An error occurred trying to wipe the virtual machine \"" + vm.Name + "\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        continue;
-                    }
-                }
-            }*/
         }
 
         //Imports existing VM files to a new VM
@@ -1483,23 +1389,8 @@ namespace _86BM2
 
         private void openConfigFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //VMOpenConfig();
-        }
-
-        private void VMOpenConfig()
-        {
-            /*foreach (ListViewItem lvi in lstVMs.SelectedItems)
-            {
-                VirtualMachine vm = (VirtualMachine)lvi.Tag;
-                try
-                {
-                    Process.Start(vm.Path + Path.DirectorySeparatorChar + "86box.cfg");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("The config file for the virtual machine \"" + vm.Name + "\" could not be opened. Make sure it still exists and that you have sufficient privileges to access it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }*/
+            VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
+            vm.OpenConfig();
         }
     }
 }

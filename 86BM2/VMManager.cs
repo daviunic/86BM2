@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace _86BM2
 {
@@ -16,8 +17,8 @@ namespace _86BM2
             Paused  = 3,
         }
 
-        public static string vmListDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "86BM2");
-        public static string vmListFile = Path.Combine(vmListDir, "vmlist.json");
+        public static string exeDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+        public static string vmListFile = Path.Combine(exeDir, "vmlist.json");
 
         static VMManager()
         {
@@ -25,10 +26,10 @@ namespace _86BM2
         }
 
         /// <summary>
-        /// Returns the VM with the specified Guid, if it exists.
+        /// Returns the VM with the specified ID, if it exists.
         /// </summary>
-        /// <param name="Guid">The Guid of the VM to return.</param>
-        /// <returns>The VM with the specified Guid if it exists, otherwise null.</returns>
+        /// <param name="Id">The ID of the VM to return.</param>
+        /// <returns>The VM with the specified ID if it exists, otherwise null.</returns>
         public static VirtualMachine GetById(int Id)
         {
             foreach(VirtualMachine vm in VMs)
@@ -126,9 +127,7 @@ namespace _86BM2
             foreach(VirtualMachine vm in VMs)
             {
                 if(vm.State != VMState.Stopped)
-                {
                     vm.ForceStop();
-                }
             }
         }
 
@@ -140,18 +139,15 @@ namespace _86BM2
             //If the file doesn't exist (yet), load default values and create the file
             if (!File.Exists(vmListFile))
             {
-                //Also create the directory if even that doesn't exist (yet)
-                if (!Directory.Exists(vmListDir))
-                {
-                    Directory.CreateDirectory(vmListDir);
-                }
-
                 VMs = new List<VirtualMachine>();
+
+                //Create the vmlist.json file
             }
             else
             {
                 var json = File.ReadAllText(vmListFile);
 
+                //Deserialize to List<VirtualMachine>
             }
         }
     }
