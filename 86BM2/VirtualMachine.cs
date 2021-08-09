@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using static _86BM2.Interop;
 using static _86BM2.VMManager;
@@ -33,7 +34,7 @@ namespace _86BM2
             Random rand = new Random();
             Id = rand.Next();
 
-            while(GetById(Id) != null)
+            while (GetById(Id) != null)
                 Id = rand.Next();
 
             Name = "New virtual machine";
@@ -59,7 +60,7 @@ namespace _86BM2
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
-        public VirtualMachine(string name, string desc, string path, bool enableLogging, string logPath, bool dumpConfig, bool enableDebug, 
+        public VirtualMachine(string name, string desc, string path, bool enableLogging, string logPath, bool dumpConfig, bool enableDebug,
             bool startFullscreen, bool noQuitConfirm, bool enableCrashDump)
         {
             Random rand = new Random();
@@ -125,19 +126,19 @@ namespace _86BM2
                 p.Start();
                 ProcessID = p.Id;
 
-                if (!p.MainWindowHandle.Equals(IntPtr.Zero))
+                //Wait while the new VM sends back its main window handle
+                while (Handle.Equals(IntPtr.Zero))
                 {
-                    //Handle = p.MainWindowHandle; //Get the window handle of the newly created process
-                    State = VMState.Running;
-
-                    //Start the worker which will wait for the VM's window to close
-                    if (!worker.IsBusy)
-                        worker.RunWorkerAsync(ProcessID);
-                    else
-                        throw new Exception("The background worker for this VM is busy");
+                    Thread.Sleep(100);
                 }
+
+                State = VMState.Running;
+
+                //Start the worker which will wait for the VM's window to close
+                if (!worker.IsBusy)
+                    worker.RunWorkerAsync(ProcessID);
                 else
-                    throw new Exception("86Box process failed to initialize");
+                    throw new Exception("The background worker for this VM is busy");
             }
         }
 
@@ -334,7 +335,7 @@ namespace _86BM2
         /// </summary>
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Error != null) 
+            if (e.Error != null)
                 throw e.Error;
             else
             {

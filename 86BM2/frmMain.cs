@@ -908,14 +908,23 @@ namespace _86BM2
         //This function monitors received window messages
         protected override void WndProc(ref Message m)
         {
+            // 0x8891 - Main window init complete, wparam = VM ID, lparam = window handle
             // 0x8895 - VM paused/resumed, wparam = 1: VM paused, wparam = 0: VM resumed
             // 0x8896 - Dialog opened/closed, wparam = 1: opened, wparam = 0: closed
             // 0x8897 - Shutdown confirmed
+            if(m.Msg == 0x8891)
+            {
+                if(m.WParam.ToInt32() >= 0 && m.LParam != IntPtr.Zero)
+                {
+                    VirtualMachine vm = GetById(m.WParam.ToInt32());
+                    vm.Handle = m.LParam;
+                }
+            }
             if (m.Msg == 0x8895)
             {
                 if (m.WParam.ToInt32() == 1) //VM was paused
                 {
-                    VirtualMachine vm = GetById(m.LParam.ToInt32());
+                    VirtualMachine vm = GetByHandle(m.LParam);
                     vm.State = VMState.Paused;
 
                     pauseResumeToolStripMenuItem.Text = "Resume";
@@ -937,7 +946,7 @@ namespace _86BM2
                 }
                 else if (m.WParam.ToInt32() == 0) //VM was resumed
                 {
-                    VirtualMachine vm = GetById(m.LParam.ToInt32());
+                    VirtualMachine vm = GetByHandle(m.LParam);
                     vm.State = VMState.Running;
 
                     pauseResumeToolStripMenuItem.Text = "Pause";
@@ -962,7 +971,7 @@ namespace _86BM2
             {
                 if (m.WParam.ToInt32() == 1)  //A dialog was opened
                 {
-                    VirtualMachine vm = GetById(m.LParam.ToInt32());
+                    VirtualMachine vm = GetByHandle(m.LParam);
                     vm.State = VMState.Waiting;
 
                     btnStartStop.Enabled = false;
@@ -985,7 +994,7 @@ namespace _86BM2
                 }
                 else if (m.WParam.ToInt32() == 0) //A dialog was closed
                 {
-                    VirtualMachine vm = GetById(m.LParam.ToInt32());
+                    VirtualMachine vm = GetByHandle(m.LParam);
                     vm.State = VMState.Running;
 
                     btnStartStop.Enabled = true;
@@ -1013,7 +1022,7 @@ namespace _86BM2
             }
             if (m.Msg == 0x8897) //Shutdown confirmed
             {
-                VirtualMachine vm = GetById(m.LParam.ToInt32());
+                VirtualMachine vm = GetByHandle(m.LParam);
                 vm.State = VMState.Stopped;
                 vm.Handle = IntPtr.Zero;
                 vm.ProcessID = -1;

@@ -369,9 +369,9 @@
             this.btnCtrlAltDel.Location = new System.Drawing.Point(481, 15);
             this.btnCtrlAltDel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCtrlAltDel.Name = "btnCtrlAltDel";
-            this.btnCtrlAltDel.Size = new System.Drawing.Size(75, 38);
+            this.btnCtrlAltDel.Size = new System.Drawing.Size(107, 38);
             this.btnCtrlAltDel.TabIndex = 6;
-            this.btnCtrlAltDel.Text = "C+A+D";
+            this.btnCtrlAltDel.Text = "Ctrl+Alt+Del";
             this.toolTip.SetToolTip(this.btnCtrlAltDel, "Send the CTRL+ALT+DEL keystroke to this virtual machine");
             this.btnCtrlAltDel.UseVisualStyleBackColor = true;
             this.btnCtrlAltDel.Click += new System.EventHandler(this.btnCtrlAltDel_Click);
@@ -380,7 +380,7 @@
             // 
             this.btnReset.Enabled = false;
             this.btnReset.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnReset.Location = new System.Drawing.Point(564, 15);
+            this.btnReset.Location = new System.Drawing.Point(596, 14);
             this.btnReset.Margin = new System.Windows.Forms.Padding(4);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(83, 38);

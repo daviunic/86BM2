@@ -17,7 +17,7 @@ namespace _86BM2
             Paused  = 3,
         }
 
-        public static string exeDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+        public static string exeDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
         public static string vmListFile = Path.Combine(exeDir, "vmlist.json");
 
         static VMManager()
