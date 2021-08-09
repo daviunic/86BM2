@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using static _86BM2.Interop;
 using static _86BM2.VMManager;
 
 namespace _86BM2
@@ -11,7 +12,7 @@ namespace _86BM2
     {
         private BackgroundWorker worker;
 
-        public Guid Guid { get; set; }
+        public int Id { get; set; }
         public IntPtr Handle { get; set; } //Window handle for the main 86Box window once it's started
         public string Name { get; set; }
         public string Description { get; set; }
@@ -20,10 +21,20 @@ namespace _86BM2
         public int ProcessID { get; set; } //Process ID of 86box.exe running the VM
         public bool EnableLogging { get; set; } //Enable 86Box logging to file
         public string LogPath { get; set; } //Path where the log file will be saved
+        public bool DumpConfigFile { get; set; } //Display the config file after it's loaded
+        public bool EnableDebugOutput { get; set; } //Enable debug output
+        public bool StartFullscreen { get; set; } //Start the VM in fullscreen mode
+        public bool NoQuitConfirmation { get; set; } //Do not ask for confirmation when closing the emulator
+        public bool EnableCrashDump { get; set; } //Enable crash dump on exceptions
 
         public VirtualMachine()
         {
-            Guid = new Guid();
+            Random rand = new Random();
+            Id = rand.Next();
+
+            while(GetById(Id) != null)
+                Id = rand.Next();
+
             Name = "New virtual machine";
             Description = "";
             Path = "";
@@ -44,7 +55,12 @@ namespace _86BM2
 
         public VirtualMachine(string name, string desc, string path, bool enableLogging, string logPath)
         {
-            Guid = new Guid();
+            Random rand = new Random();
+            Id = rand.Next();
+
+            while (GetById(Id) != null)
+                Id = rand.Next();
+
             Name = name;
             Description = desc;
             Path = path;
@@ -74,12 +90,10 @@ namespace _86BM2
 
                 Process p = new Process();
                 p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
-                p.StartInfo.Arguments = $"-P \"{Path}\" -H {ZEROID},{mainForm.handle}";
+                p.StartInfo.Arguments = $"-P \"{Path}\" -H {Id},{mainForm.handle}";
 
                 if (EnableLogging)
-                {
                     p.StartInfo.Arguments += $" -L \"{LogPath}\"";
-                }
 
                 p.Start();
                 ProcessID = p.Id;
@@ -109,7 +123,7 @@ namespace _86BM2
         {
             if (State == VMState.Running)
             {
-                Interop.PostMessage(Handle, 0x8890, IntPtr.Zero, IntPtr.Zero);
+                PostMessage(Handle, 0x8890, IntPtr.Zero, IntPtr.Zero);
                 State = VMState.Paused;
             }
         }
@@ -121,7 +135,7 @@ namespace _86BM2
         {
             if (State == VMState.Paused)
             {
-                Interop.PostMessage(Handle, 0x8890, IntPtr.Zero, IntPtr.Zero);
+                PostMessage(Handle, 0x8890, IntPtr.Zero, IntPtr.Zero);
                 State = VMState.Running;
             }
         }
@@ -133,8 +147,8 @@ namespace _86BM2
         {
             if (State == VMState.Running || State == VMState.Paused)
             {
-                Interop.PostMessage(Handle, 0x8893, IntPtr.Zero, IntPtr.Zero);
-                Interop.SetForegroundWindow(Handle);
+                PostMessage(Handle, 0x8893, IntPtr.Zero, IntPtr.Zero);
+                SetForegroundWindow(Handle);
             }
         }
 
@@ -144,9 +158,7 @@ namespace _86BM2
         public void ForceStop()
         {
             if (State == VMState.Running || State == VMState.Paused)
-            {
-                Interop.PostMessage(Handle, 0x0002, IntPtr.Zero, IntPtr.Zero);
-            }
+                PostMessage(Handle, 0x0002, IntPtr.Zero, IntPtr.Zero);
         }
 
         /// <summary>
@@ -156,7 +168,7 @@ namespace _86BM2
         {
             if (State == VMState.Running || State == VMState.Paused)
             {
-                Interop.PostMessage(Handle, 0x8894, IntPtr.Zero, IntPtr.Zero);
+                PostMessage(Handle, 0x8894, IntPtr.Zero, IntPtr.Zero);
                 State = VMState.Running;
             }
         }
@@ -168,8 +180,8 @@ namespace _86BM2
         {
             if (State == VMState.Running || State == VMState.Paused)
             {
-                Interop.PostMessage(Handle, 0x8892, IntPtr.Zero, IntPtr.Zero);
-                Interop.SetForegroundWindow(Handle);
+                PostMessage(Handle, 0x8892, IntPtr.Zero, IntPtr.Zero);
+                SetForegroundWindow(Handle);
             }
         }
 
@@ -193,8 +205,8 @@ namespace _86BM2
         {
             if (State == VMState.Running || State == VMState.Paused)
             {
-                Interop.PostMessage(Handle, 0x8889, IntPtr.Zero, IntPtr.Zero);
-                Interop.SetForegroundWindow(Handle);
+                PostMessage(Handle, 0x8889, IntPtr.Zero, IntPtr.Zero);
+                SetForegroundWindow(Handle);
             }
             else if (State == VMState.Stopped)
             {
@@ -202,12 +214,10 @@ namespace _86BM2
 
                 Process p = new Process();
                 p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
-                p.StartInfo.Arguments = $"-S -P \"{Path}\" -H {ZEROID},{mainForm.handle}";
+                p.StartInfo.Arguments = $"-S -P \"{Path}\" -H {Id},{mainForm.handle}";
 
                 if (EnableLogging)
-                {
                     p.StartInfo.Arguments += $" -L \"{LogPath}\"";
-                }
 
                 p.Start();
 
@@ -320,9 +330,7 @@ namespace _86BM2
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null) 
-            {
                 throw e.Error;
-            }
             else
             {
                 Handle = IntPtr.Zero;

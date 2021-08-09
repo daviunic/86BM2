@@ -278,7 +278,7 @@
             // lbl86BoxVer1
             // 
             this.lbl86BoxVer1.AutoSize = true;
-            this.lbl86BoxVer1.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.lbl86BoxVer1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.lbl86BoxVer1.ForeColor = System.Drawing.SystemColors.ControlText;
             this.lbl86BoxVer1.Location = new System.Drawing.Point(100, 59);
             this.lbl86BoxVer1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -350,7 +350,6 @@
             // btnBrowse1
             // 
             this.btnBrowse1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnBrowse1.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.btnBrowse1.Location = new System.Drawing.Point(594, 20);
             this.btnBrowse1.Margin = new System.Windows.Forms.Padding(2);
             this.btnBrowse1.Name = "btnBrowse1";
@@ -464,13 +463,12 @@
             // lnkGithub
             // 
             this.lnkGithub.AutoSize = true;
-            this.lnkGithub.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lnkGithub.Location = new System.Drawing.Point(15, 200);
             this.lnkGithub.Name = "lnkGithub";
             this.lnkGithub.Size = new System.Drawing.Size(264, 19);
             this.lnkGithub.TabIndex = 12;
             this.lnkGithub.TabStop = true;
-            this.lnkGithub.Text = "https://github.com/86Box/86BoxManager";
+            this.lnkGithub.Text = "https://github.com/daviunic/86BM2";
             this.lnkGithub.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkGithub_LinkClicked);
             // 
             // imgLogo
@@ -487,7 +485,6 @@
             // lblVersion1
             // 
             this.lblVersion1.AutoSize = true;
-            this.lblVersion1.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lblVersion1.Location = new System.Drawing.Point(69, 83);
             this.lblVersion1.Name = "lblVersion1";
             this.lblVersion1.Size = new System.Drawing.Size(137, 19);
@@ -497,7 +494,6 @@
             // lnkGithub2
             // 
             this.lnkGithub2.AutoSize = true;
-            this.lnkGithub2.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lnkGithub2.Location = new System.Drawing.Point(15, 177);
             this.lnkGithub2.Name = "lnkGithub2";
             this.lnkGithub2.Size = new System.Drawing.Size(209, 19);
@@ -509,7 +505,6 @@
             // lblCopyright
             // 
             this.lblCopyright.AutoSize = true;
-            this.lblCopyright.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lblCopyright.Location = new System.Drawing.Point(15, 111);
             this.lblCopyright.Name = "lblCopyright";
             this.lblCopyright.Size = new System.Drawing.Size(368, 57);
@@ -520,7 +515,6 @@
             // lblVersion
             // 
             this.lblVersion.AutoSize = true;
-            this.lblVersion.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lblVersion.Location = new System.Drawing.Point(15, 83);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(57, 19);
@@ -530,7 +524,6 @@
             // lblDesc
             // 
             this.lblDesc.AutoSize = true;
-            this.lblDesc.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lblDesc.Location = new System.Drawing.Point(15, 55);
             this.lblDesc.Name = "lblDesc";
             this.lblDesc.Size = new System.Drawing.Size(307, 19);
@@ -558,7 +551,6 @@
             this.ClientSize = new System.Drawing.Size(709, 336);
             this.Controls.Add(this.tbcSettings);
             this.Controls.Add(this.pnlBottom);
-            this.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

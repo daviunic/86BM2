@@ -18,7 +18,6 @@ namespace _86BM2
 
         public static string vmListDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "86BM2");
         public static string vmListFile = Path.Combine(vmListDir, "vmlist.json");
-        public const string ZEROID = "0000000000000000"; //Used for the ID parameter of 86Box -H
 
         static VMManager()
         {
@@ -30,11 +29,11 @@ namespace _86BM2
         /// </summary>
         /// <param name="Guid">The Guid of the VM to return.</param>
         /// <returns>The VM with the specified Guid if it exists, otherwise null.</returns>
-        public static VirtualMachine Get(Guid Guid)
+        public static VirtualMachine GetById(int Id)
         {
             foreach(VirtualMachine vm in VMs)
             {
-                if (vm.Guid == Guid)
+                if (vm.Id == Id)
                     return vm;
             }
 
@@ -46,7 +45,7 @@ namespace _86BM2
         /// </summary>
         /// <param name="Pid">The process ID of the VM to return. Must be more than 0.</param>
         /// <returns>The VM with the specified process ID if it exists, otherwise null.</returns>
-        public static VirtualMachine Get(int Pid)
+        public static VirtualMachine GetByPid(int Pid)
         {
             if (Pid <= 0)
                 return null;
@@ -65,7 +64,7 @@ namespace _86BM2
         /// </summary>
         /// <param name="Handle">The window handle of the VM to return. Must not be a zero pointer.</param>
         /// <returns>The VM with the specified window handle if it exists, otherwise null.</returns>
-        public static VirtualMachine Get(IntPtr Handle)
+        public static VirtualMachine GetByHandle(IntPtr Handle)
         {
             if (Handle == IntPtr.Zero)
                 return null;
@@ -94,11 +93,11 @@ namespace _86BM2
         /// Removes the VM with the specified Guid from the VM list, if it exists.
         /// </summary>
         /// <param name="Guid">The Guid of the VM to be removed from the VM list.</param>
-        public static void Remove(Guid Guid)
+        public static void Remove(int Id)
         {
             foreach(VirtualMachine vm in VMs)
             {
-                if(vm.Guid == Guid)
+                if(vm.Id == Id)
                 {
                     VMs.Remove(vm);
 

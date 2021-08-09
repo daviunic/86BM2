@@ -5,28 +5,12 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using static _86BM2.VMManager;
+using static _86BM2.Interop;
 
 namespace _86BM2
 {
     public partial class frmMain : Form
     {
-        //Win32 API imports
-        //Posts a message to the window with specified handle - DOES NOT WAIT FOR THE RECIPIENT TO PROCESS THE MESSAGE!!!
-        [DllImport("user32.dll")]
-        public static extern int PostMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
-
-        //Focus a window
-        [DllImport("user32.dll")]
-        public static extern int SetForegroundWindow(IntPtr hwnd);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct COPYDATASTRUCT
-        {
-            public IntPtr dwData;
-            public int cbData;
-            public IntPtr lpData;
-        }
-
         private static RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true); //Registry key for accessing the settings and VM list
         public string exepath = ""; //Path to 86box.exe and the romset
         public string cfgpath = ""; //Path to the virtual machines folder (configs, nvrs, etc.)
@@ -72,18 +56,14 @@ namespace _86BM2
             //Check if command line arguments for starting a VM are OK
             if (Program.args.Length == 3 && Program.args[1] == "-S" && Program.args[2] != null)
             {
-                //Find the VM with given name
-                VirtualMachine vm = Get(Guid.Parse(Program.args[2]));
+                //Find the VM with given ID
+                VirtualMachine vm = GetById(int.Parse(Program.args[2]));
 
                 //Then select and start it if it's found
                 if (vm != null)
-                {
                     vm.Start();   
-                }
                 else
-                {
-                    MessageBox.Show("The virtual machine with the GUID \"" + Program.args[2] + "\" could not be found. It may have been removed or the specified GUID is incorrect.", "Virtual machine not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    MessageBox.Show("The virtual machine with the ID \"" + Program.args[2] + "\" could not be found. It may have been removed or the specified ID is incorrect.", "Virtual machine not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -91,7 +71,7 @@ namespace _86BM2
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Stopped)
                     vm.Start();
                 else if (vm.State == VMState.Running)
@@ -110,7 +90,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Running || vm.State == VMState.Paused || vm.State == VMState.Stopped)
                     vm.Configure();
             }
@@ -142,7 +122,7 @@ namespace _86BM2
             else if (lstVMs.SelectedItems.Count == 1)
             {
                 //Disable relevant buttons if VM is running
-                VirtualMachine vm = Get((Guid)lstVMs.SelectedItems[0].Tag);
+                VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
                 if (vm.State == VMState.Running)
                 {
                     btnStartStop.Enabled = true;
@@ -361,7 +341,7 @@ namespace _86BM2
             }
             else if (lstVMs.SelectedItems.Count == 1)
             {
-                VirtualMachine vm = Get((Guid)lstVMs.SelectedItems[0].Tag);
+                VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
                 switch (vm.State)
                 {
                     case VMState.Running:
@@ -459,7 +439,7 @@ namespace _86BM2
             {
                 foreach (ListViewItem lvi in lstVMs.Items)
                 {
-                    VirtualMachine vm = Get((Guid)lvi.Tag);
+                    VirtualMachine vm = GetById((int)lvi.Tag);
                     if (vm.State != VMState.Stopped && Visible)
                     {
                         vmCount++;
@@ -500,7 +480,7 @@ namespace _86BM2
 
         private void pauseResumeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VirtualMachine vm = Get((Guid)lstVMs.SelectedItems[0].Tag);
+            VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
             if (vm.State == VMState.Paused)
                 vm.Resume();
             else if (vm.State == VMState.Running)
@@ -512,7 +492,7 @@ namespace _86BM2
         //Start VM if it's stopped or stop it if it's running/paused
         private void startStopToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            VirtualMachine vm = Get((Guid)lstVMs.SelectedItems[0].Tag);
+            VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
             if (vm.State == VMState.Stopped)
                 vm.Start();
             else if (vm.State == VMState.Running)
@@ -530,7 +510,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Running || vm.State == VMState.Paused || vm.State == VMState.Stopped)
                     vm.Configure();
             }
@@ -617,7 +597,7 @@ namespace _86BM2
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
 
                 if (vm.State == VMState.Running)
                     vm.SendCtrAltDel();
@@ -635,7 +615,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
 
                 if (vm.State == VMState.Running)
                     vm.HardReset();
@@ -652,25 +632,20 @@ namespace _86BM2
         //For double clicking an item, do something based on VM status
         private void lstVMs_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            /*if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
-                if (lstVMs.SelectedItems[0].Bounds.Contains(e.Location))
+                ListViewHitTestInfo hti = lstVMs.HitTest(e.X, e.Y);
+                ListViewItem lvi = hti.Item;
+
+                if (lvi != null)
                 {
-                    VirtualMachine vm = (VirtualMachine)lstVMs.SelectedItems[0].Tag;
-                    if (vm.Status == VirtualMachine.STATUS_STOPPED)
-                    {
-                        VMStart();
-                    }
-                    else if (vm.Status == VirtualMachine.STATUS_RUNNING)
-                    {
-                        VMRequestStop();
-                    }
-                    else if (vm.Status == VirtualMachine.STATUS_PAUSED)
-                    {
-                        VMResume();
-                    }
+                    VirtualMachine vm = GetById((int)lstVMs.SelectedItems[0].Tag);
+                    if (vm.State == VMState.Stopped)
+                        vm.Start();
+                    else if (vm.State == VMState.Running || vm.State == VMState.Paused || vm.State == VMState.Waiting)
+                        _ = SetForegroundWindow(vm.Handle);
                 }
-            }*/
+            }
         }
 
         //Creates a new VM from the data recieved and adds it to the listview
@@ -789,10 +764,10 @@ namespace _86BM2
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if(vm.State == VMState.Stopped)
                 {
-                    Remove(vm.Guid);
+                    Remove(vm.Id);
                 }
             }
 
@@ -866,11 +841,9 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Stopped)
-                {
-                    Remove(vm.Guid);
-                }
+                    Remove(vm.Id);
             }
 
             VMCountRefresh();
@@ -887,7 +860,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
 
                 if (vm.State == VMState.Running)
                     vm.SendCtrAltDel();
@@ -905,7 +878,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
 
                 if (vm.State == VMState.Running)
                     vm.HardReset();
@@ -923,7 +896,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State == VMState.Running)
                 {
                     vm.Pause();
@@ -943,7 +916,7 @@ namespace _86BM2
             {
                 if (m.WParam.ToInt32() == 1) //VM was paused
                 {
-                    VirtualMachine vm = Get(m.LParam);
+                    VirtualMachine vm = GetById(m.LParam.ToInt32());
                     vm.State = VMState.Paused;
 
                     pauseResumeToolStripMenuItem.Text = "Resume";
@@ -965,7 +938,7 @@ namespace _86BM2
                 }
                 else if (m.WParam.ToInt32() == 0) //VM was resumed
                 {
-                    VirtualMachine vm = Get(m.LParam);
+                    VirtualMachine vm = GetById(m.LParam.ToInt32());
                     vm.State = VMState.Running;
 
                     pauseResumeToolStripMenuItem.Text = "Pause";
@@ -990,7 +963,7 @@ namespace _86BM2
             {
                 if (m.WParam.ToInt32() == 1)  //A dialog was opened
                 {
-                    VirtualMachine vm = Get(m.LParam);
+                    VirtualMachine vm = GetById(m.LParam.ToInt32());
                     vm.State = VMState.Waiting;
 
                     btnStartStop.Enabled = false;
@@ -1013,7 +986,7 @@ namespace _86BM2
                 }
                 else if (m.WParam.ToInt32() == 0) //A dialog was closed
                 {
-                    VirtualMachine vm = Get(m.LParam);
+                    VirtualMachine vm = GetById(m.LParam.ToInt32());
                     vm.State = VMState.Running;
 
                     btnStartStop.Enabled = true;
@@ -1041,7 +1014,7 @@ namespace _86BM2
             }
             if (m.Msg == 0x8897) //Shutdown confirmed
             {
-                VirtualMachine vm = Get(m.LParam);
+                VirtualMachine vm = GetById(m.LParam.ToInt32());
                 vm.State = VMState.Stopped;
                 vm.Handle = IntPtr.Zero;
                 vm.ProcessID = -1;
@@ -1129,7 +1102,7 @@ namespace _86BM2
         {
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 vm.OpenFolder();
             }
         }
@@ -1146,7 +1119,7 @@ namespace _86BM2
             {
                 foreach (ListViewItem lvi in lstVMs.SelectedItems)
                 {
-                    VirtualMachine vm = Get((Guid)lvi.Tag);
+                    VirtualMachine vm = GetById((int)lvi.Tag);
                     if (vm.State == VMState.Running)
                         vm.RequestStop();
                     else if (vm.State == VMState.Stopped)
@@ -1161,7 +1134,7 @@ namespace _86BM2
             if (e.KeyCode == Keys.Delete)
             {
                 foreach (ListViewItem lvi in lstVMs.SelectedItems)
-                    Remove((Guid)lvi.Tag);
+                    Remove((int)lvi.Tag);
             }
 
             VMCountRefresh();
@@ -1181,7 +1154,7 @@ namespace _86BM2
             int vmCount = 0;
             foreach (ListViewItem lvi in lstVMs.Items)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if (vm.State != VMState.Stopped)
                     vmCount++;
             }
@@ -1302,7 +1275,7 @@ namespace _86BM2
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if(vm.State != VMState.Stopped)
                     vm.Kill();
             }
@@ -1365,7 +1338,7 @@ namespace _86BM2
         {
             foreach(ListViewItem lvi in lstVMs.SelectedItems)
             {
-                VirtualMachine vm = Get((Guid)lvi.Tag);
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 if(vm.State == VMState.Stopped)
                 {
                     vm.Wipe();

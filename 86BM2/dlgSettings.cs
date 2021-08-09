@@ -107,7 +107,7 @@ namespace _86BM2
                     lbl86BoxVer1.ForeColor = Color.Red;
                 }
             }
-            catch(FileNotFoundException ex)
+            catch(FileNotFoundException)
             {
                 lbl86BoxVer1.Text = "86Box.exe not found";
                 lbl86BoxVer1.ForeColor = Color.Gray;
