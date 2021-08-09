@@ -116,9 +116,9 @@ namespace _86BM2
         
         //TODO: Rewrite
         //Save the settings to the registry
-        private bool SaveSettings()
+        private bool SaveSettings(bool silent = false)
         {
-            if (cbxLogging.Checked && string.IsNullOrWhiteSpace(txtLogPath.Text))
+            if (!silent && cbxLogging.Checked && string.IsNullOrWhiteSpace(txtLogPath.Text))
             {
                 DialogResult result = MessageBox.Show("Using an empty or whitespace string for the log path will prevent 86Box from logging anything. Are you sure you want to use this path?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.No)
@@ -126,7 +126,7 @@ namespace _86BM2
                     return false;
                 }
             }
-            if (!File.Exists(txtEXEdir.Text + "86Box.exe") && !File.Exists(txtEXEdir.Text + @"\86Box.exe"))
+            if (!silent && !File.Exists(txtEXEdir.Text + "86Box.exe") && !File.Exists(txtEXEdir.Text + @"\86Box.exe"))
             {
                 DialogResult result = MessageBox.Show("86Box.exe could not be found in the directory you specified, so you won't be able to use any virtual machines. Are you sure you want to use this path?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.No)
@@ -136,13 +136,7 @@ namespace _86BM2
             }
             try
             {
-                RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true); //Try to open the key first (in read-write mode) to see if it already exists
-                if (regkey == null) //Regkey doesn't exist yet, must be created first and then reopened
-                {
-                    Registry.CurrentUser.CreateSubKey(@"SOFTWARE\86Box");
-                    regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true);
-                    regkey.CreateSubKey("Virtual Machines");
-                }
+                using var regkey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\86Box");
 
                 //Store the new values, close the key, changes are saved
                 regkey.SetValue("EXEdir", txtEXEdir.Text, RegistryValueKind.String);
@@ -155,7 +149,6 @@ namespace _86BM2
                 regkey.SetValue("EnableLogging", cbxLogging.Checked, RegistryValueKind.DWord);
                 regkey.SetValue("LogPath", txtLogPath.Text, RegistryValueKind.String);
                 regkey.SetValue("EnableGridLines", cbxGrid.Checked, RegistryValueKind.DWord);
-                regkey.Close();
 
                 settingsChanged = CheckForChanges();
             }
@@ -175,72 +168,27 @@ namespace _86BM2
         //Read the settings from the registry
         private void LoadSettings()
         {
-            try
-            {
-                RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", false); //Open the key as read only
+            using var regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", false); // Open the key as read only
 
-                //If the key doesn't exist yet, fallback to defaults
-                if (regkey == null)
-                {
-                    MessageBox.Show("86Box Manager settings could not be loaded. This is normal if you're running 86Box Manager for the first time. Default values will be used.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            // Load values, and if they don't exist, grab the defaults.
+            txtEXEdir.Text = regkey?.GetValue("EXEdir")?.ToString() ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\86Box VMs\";
+            txtCFGdir.Text = regkey?.GetValue("CFGdir")?.ToString() ?? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\86Box\";
+            txtLaunchTimeout.Text = regkey?.GetValue("LaunchTimeout")?.ToString() ?? "5000";
+            txtLogPath.Text = regkey?.GetValue("LogPath")?.ToString() ?? string.Empty;
+            cbxMinimize.Checked = Convert.ToBoolean(regkey?.GetValue("MinimizeOnVMStart") ?? false);
+            cbxShowConsole.Checked = Convert.ToBoolean(regkey?.GetValue("ShowConsole") ?? true);
+            cbxMinimizeTray.Checked = Convert.ToBoolean(regkey?.GetValue("MinimizeToTray") ?? false);
+            cbxCloseTray.Checked = Convert.ToBoolean(regkey?.GetValue("CloseToTray") ?? false);
+            cbxLogging.Checked = Convert.ToBoolean(regkey?.GetValue("EnableLogging") ?? false);
+            cbxGrid.Checked = Convert.ToBoolean(regkey?.GetValue("EnableGridLines") ?? false);
 
-                    //Create the key and reopen it for write access
-                    Registry.CurrentUser.CreateSubKey(@"SOFTWARE\86Box");
-                    regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true);
-                    regkey.CreateSubKey("Virtual Machines");
+            txtLogPath.Enabled = cbxLogging.Checked;
+            btnBrowse3.Enabled = cbxLogging.Checked;
 
-                    txtCFGdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\86Box VMs\";
-                    txtEXEdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\86Box\";
-                    cbxMinimize.Checked = false;
-                    cbxShowConsole.Checked = true;
-                    cbxMinimizeTray.Checked = false;
-                    cbxCloseTray.Checked = false;
-                    cbxLogging.Checked = false;
-                    txtLaunchTimeout.Text = "5000";
-                    txtLogPath.Text = "";
-                    cbxGrid.Checked = false;
-                    btnBrowse3.Enabled = false;
-                    txtLogPath.Enabled = false;
-
-                    SaveSettings(); //This will write the default values to the registry
-                }
-                else
-                {
-                    txtEXEdir.Text = regkey.GetValue("EXEdir").ToString();
-                    txtCFGdir.Text = regkey.GetValue("CFGdir").ToString();
-                    txtLaunchTimeout.Text = regkey.GetValue("LaunchTimeout").ToString();
-                    txtLogPath.Text = regkey.GetValue("LogPath").ToString();
-                    cbxMinimize.Checked = Convert.ToBoolean(regkey.GetValue("MinimizeOnVMStart"));
-                    cbxShowConsole.Checked = Convert.ToBoolean(regkey.GetValue("ShowConsole"));
-                    cbxMinimizeTray.Checked = Convert.ToBoolean(regkey.GetValue("MinimizeToTray"));
-                    cbxCloseTray.Checked = Convert.ToBoolean(regkey.GetValue("CloseToTray"));
-                    cbxLogging.Checked = Convert.ToBoolean(regkey.GetValue("EnableLogging"));
-                    cbxGrid.Checked = Convert.ToBoolean(regkey.GetValue("EnableGridLines"));
-                    txtLogPath.Enabled = cbxLogging.Checked;
-                    btnBrowse3.Enabled = cbxLogging.Checked;
-                }
-
-                regkey.Close();
-            }
-            catch (Exception ex)
-            {
-                txtCFGdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\86Box VMs";
-                txtEXEdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\86Box";
-                cbxMinimize.Checked = false;
-                cbxShowConsole.Checked = true;
-                cbxMinimizeTray.Checked = false;
-                cbxCloseTray.Checked = false;
-                cbxLogging.Checked = false;
-                txtLaunchTimeout.Text = "5000";
-                txtLogPath.Text = "";
-                cbxGrid.Checked = false;
-                txtLogPath.Enabled = false;
-                btnBrowse3.Enabled = false;
-            }
+            // We don't know whether we actually used any default settings, so better save either way.
+            SaveSettings(true);
         }
 
-// .NET Core implements the better Vista-style folder browse dialog in the stock FolderBrowserDialog
-#if NETCOREAPP
         private void btnBrowse1_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog
@@ -278,44 +226,6 @@ namespace _86BM2
                 }
             }
         }
-// A custom class is required for Vista-style folder dialogs under the original .NET Framework
-#else
-        private void btnBrowse1_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dialog = new FolderSelectDialog
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "Select a folder where 86Box program files and the roms folder are located"
-            };
-
-            if (dialog.Show(Handle))
-            {
-                txtEXEdir.Text  = dialog.FileName;
-                if (!txtEXEdir.Text.EndsWith(@"\")) //Just in case
-                {
-                    txtEXEdir.Text += @"\";
-                }
-            }
-        }
-
-        private void btnBrowse2_Click(object sender, EventArgs e)
-        {
-            FolderSelectDialog dialog = new FolderSelectDialog
-            {
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer),
-                Title = "Select a folder where your virtual machines (configs, nvr folders, etc.) will be located"
-            };
-
-            if (dialog.Show(Handle))
-            {
-                txtCFGdir.Text = dialog.FileName;
-                if (!txtCFGdir.Text.EndsWith(@"\")) //Just in case
-                {
-                    txtCFGdir.Text += @"\";
-                }
-            }
-        }
-#endif
 
         private void btnDefaults_Click(object sender, EventArgs e)
         {
@@ -329,14 +239,7 @@ namespace _86BM2
         //Resets the settings to their default values
         private void ResetSettings()
         {
-            RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true);
-            if (regkey == null)
-            {
-                Registry.CurrentUser.CreateSubKey(@"SOFTWARE\86Box");
-                regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true);
-                regkey.CreateSubKey("Virtual Machines");
-            }
-            regkey.Close();
+            var regkey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\86Box");
 
             txtCFGdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\86Box VMs\";
             txtEXEdir.Text = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\86Box\";
@@ -357,33 +260,21 @@ namespace _86BM2
         //Checks if all controls match the currently saved settings to determine if any changes were made
         private bool CheckForChanges()
         {
-            RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box");
+            using var regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box");
 
-            try
-            {
-                btnApply.Enabled = (
-                    txtEXEdir.Text != regkey.GetValue("EXEdir").ToString() ||
-                    txtCFGdir.Text != regkey.GetValue("CFGdir").ToString() ||
-                    txtLogPath.Text != regkey.GetValue("LogPath").ToString() ||
-                    txtLaunchTimeout.Text != regkey.GetValue("LaunchTimeout").ToString() ||
-                    cbxMinimize.Checked != Convert.ToBoolean(regkey.GetValue("MinimizeOnVMStart")) ||
-                    cbxShowConsole.Checked != Convert.ToBoolean(regkey.GetValue("ShowConsole")) ||
-                    cbxMinimizeTray.Checked != Convert.ToBoolean(regkey.GetValue("MinimizeToTray")) ||
-                    cbxCloseTray.Checked != Convert.ToBoolean(regkey.GetValue("CloseToTray")) || 
-                    cbxLogging.Checked != Convert.ToBoolean(regkey.GetValue("EnableLogging")) ||
-                    cbxGrid.Checked != Convert.ToBoolean(regkey.GetValue("EnableGridLines")));
+            btnApply.Enabled = (
+                txtEXEdir.Text != (regkey?.GetValue("EXEdir")?.ToString() ?? string.Empty) ||
+                txtCFGdir.Text != (regkey?.GetValue("CFGdir")?.ToString() ?? string.Empty) ||
+                txtLogPath.Text != (regkey?.GetValue("LogPath")?.ToString() ?? string.Empty) ||
+                txtLaunchTimeout.Text != (regkey?.GetValue("LaunchTimeout")?.ToString() ?? string.Empty) ||
+                cbxMinimize.Checked != Convert.ToBoolean(regkey?.GetValue("MinimizeOnVMStart")) ||
+                cbxShowConsole.Checked != Convert.ToBoolean(regkey?.GetValue("ShowConsole")) ||
+                cbxMinimizeTray.Checked != Convert.ToBoolean(regkey?.GetValue("MinimizeToTray")) ||
+                cbxCloseTray.Checked != Convert.ToBoolean(regkey?.GetValue("CloseToTray")) || 
+                cbxLogging.Checked != Convert.ToBoolean(regkey?.GetValue("EnableLogging")) ||
+                cbxGrid.Checked != Convert.ToBoolean(regkey?.GetValue("EnableGridLines")));
 
-                return btnApply.Enabled;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.Message);
-                return true; //For now let's just return true if anything goes wrong
-            }
-            finally
-            {
-                regkey.Close();
-            }
+            return btnApply.Enabled;
         }
 
         private void cbx_CheckedChanged(object sender, EventArgs e)
