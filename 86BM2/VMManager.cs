@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 
 namespace _86BM2
 {
     public static class VMManager
     {
-        private static List<VirtualMachine> VMs;
+        public static List<VirtualMachine> VMs { get; private set; }
 
         public enum VMState
         {
@@ -86,14 +87,14 @@ namespace _86BM2
         public static void Add(VirtualMachine vm)
         {
             VMs.Add(vm);
-
+            Save();
             //Also write the change to vmlist.json file!
         }
 
         /// <summary>
-        /// Removes the VM with the specified Guid from the VM list, if it exists.
+        /// Removes the VM with the specified Id from the VM list, if it exists.
         /// </summary>
-        /// <param name="Guid">The Guid of the VM to be removed from the VM list.</param>
+        /// <param name="Id">The Id of the VM to be removed from the VM list.</param>
         public static void Remove(int Id)
         {
             foreach(VirtualMachine vm in VMs)
@@ -101,12 +102,10 @@ namespace _86BM2
                 if(vm.Id == Id)
                 {
                     VMs.Remove(vm);
-
-                    //Also write the change to vmlist.json file!
-
+                    Save();
                     return;
                 }
-            }
+            }          
         }
 
         /// <summary>
@@ -115,8 +114,7 @@ namespace _86BM2
         public static void RemoveAll()
         {
             VMs.Clear();
-
-            //Also write the change to vmlist.json file!
+            Save();
         }
 
         /// <summary>
@@ -132,6 +130,25 @@ namespace _86BM2
         }
 
         /// <summary>
+        /// Checks if the specified Id is already used by another VM.
+        /// </summary>
+        /// <param name="Id">The Id to check for.</param>
+        /// <returns>True if the specified Id is already used by another VM, false otherwise.</returns>
+        public static bool CheckId(int Id)
+        {
+            if (VMs == null || VMs.Count == 0)
+                return false;
+
+            foreach(VirtualMachine vm in VMs)
+            {
+                if (vm.Id == Id)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Adds all VMs from the vmlist.json file to the VM list.
         /// </summary>
         public static void Load()
@@ -140,14 +157,33 @@ namespace _86BM2
             if (!File.Exists(vmListFile))
             {
                 VMs = new List<VirtualMachine>();
-
-                //Create the vmlist.json file
+                Save();
             }
             else
             {
                 var json = File.ReadAllText(vmListFile);
+                VMs = JsonSerializer.Deserialize<List<VirtualMachine>>(json);
+            }
+        }
 
-                //Deserialize to List<VirtualMachine>
+        /// <summary>
+        /// Saves all VMs to the vmlist.json file.
+        /// </summary>
+        public static void Save()
+        {
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            var json = JsonSerializer.Serialize(VMs, options);
+
+            try
+            {
+                File.WriteAllText(vmListFile, json);
+            }
+            catch (IOException)
+            {
+                //Uh-oh...
             }
         }
     }

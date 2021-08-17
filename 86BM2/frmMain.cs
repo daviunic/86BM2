@@ -6,6 +6,7 @@ using System.Threading;
 using System.Windows.Forms;
 using static _86BM2.VMManager;
 using static _86BM2.Interop;
+using System.Diagnostics;
 
 namespace _86BM2
 {
@@ -22,7 +23,6 @@ namespace _86BM2
         private int sortColumn = 0; //The column for sorting
         private SortOrder sortOrder = SortOrder.Ascending; //Sorting order
         private int launchTimeout = 5000; //Timeout for waiting for 86Box.exe to initialize
-        private bool logging = false; //Logging enabled for 86Box.exe (-L parameter)?
         private string logpath = ""; //Path to log file
         private bool gridlines = false; //Are grid lines enabled for VM list?
 
@@ -33,8 +33,27 @@ namespace _86BM2
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            //Convert the current window handle to a form that's expected by 86Box
+            handle = string.Format("{0:X}", Handle.ToInt64());
+            handle = handle.PadLeft(16, '0');
+
+            Debug.WriteLine($"frmMain_Load: handle = {handle}");
+
+            VMManager.Load();
+            lstVMs.Items.Clear();
+            foreach (VirtualMachine vm in VMs)
+            {
+                ListViewItem newLvi = new ListViewItem(vm.Name)
+                {
+                    Tag = vm.Id,
+                    ImageIndex = 0
+                };
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, "Stopped"));
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Description));
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Path));
+                lstVMs.Items.Add(newLvi);
+            }
             /*LoadSettings();
-            LoadVMs();
 
             //Load main window's state, size and position
             WindowState = Settings.Default.WindowState;
@@ -47,10 +66,6 @@ namespace _86BM2
             clmDesc.Width = Settings.Default.DescColWidth;
             clmPath.Width = Settings.Default.PathColWidth;
             */
-
-            //Convert the current window handle to a form that's expected by 86Box
-            handle = string.Format("{0:X}", Handle.ToInt64());
-            handle = handle.PadLeft(16, '0');
 
             //Check if command line arguments for starting a VM are OK
             if (Program.args.Length == 3 && Program.args[1] == "-S" && Program.args[2] != null)
@@ -896,9 +911,12 @@ namespace _86BM2
             foreach (ListViewItem lvi in lstVMs.SelectedItems)
             {
                 VirtualMachine vm = GetById((int)lvi.Tag);
-                if (vm.State == VMState.Running)
+                if (vm != null)
                 {
-                    vm.Pause();
+                    if (vm.State == VMState.Running)
+                        vm.Pause();
+                    else if (vm.State == VMState.Paused)
+                        vm.Resume();
                 }
             }
 
@@ -908,16 +926,20 @@ namespace _86BM2
         //This function monitors received window messages
         protected override void WndProc(ref Message m)
         {
-            // 0x8891 - Main window init complete, wparam = VM ID, lparam = window handle
+            // 0x8891 - Main window init complete, wparam = VM ID, lparam = VM window handle
             // 0x8895 - VM paused/resumed, wparam = 1: VM paused, wparam = 0: VM resumed
             // 0x8896 - Dialog opened/closed, wparam = 1: opened, wparam = 0: closed
             // 0x8897 - Shutdown confirmed
             if(m.Msg == 0x8891)
             {
+                Debug.WriteLine("WndProc: message 0x8891 received.");
                 if(m.WParam.ToInt32() >= 0 && m.LParam != IntPtr.Zero)
                 {
+                    Debug.WriteLine($"WndProc: message 0x8891 has wParam {m.WParam} and LParam {m.LParam}");
                     VirtualMachine vm = GetById(m.WParam.ToInt32());
-                    vm.Handle = m.LParam;
+
+                    if (vm != null)
+                        vm.Handle = m.LParam;
                 }
             }
             if (m.Msg == 0x8895)
@@ -925,46 +947,54 @@ namespace _86BM2
                 if (m.WParam.ToInt32() == 1) //VM was paused
                 {
                     VirtualMachine vm = GetByHandle(m.LParam);
-                    vm.State = VMState.Paused;
 
-                    pauseResumeToolStripMenuItem.Text = "Resume";
-                    btnPauseResume.Text = "Resume";
-                    pauseResumeToolStripMenuItem.ToolTipText = "Resume this virtual machine";
-                    toolTip.SetToolTip(btnPauseResume, "Resume this virtual machine");
-                    btnStartStop.Enabled = true;
-                    btnStartStop.Text = "Stop";
-                    startStopToolStripMenuItem.Text = "Stop";
-                    startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
-                    toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
-                    btnConfigure.Enabled = true;
+                    if (vm != null)
+                    {
+                        vm.State = VMState.Paused;
 
-                    /*lvi.SubItems[1].Text = "Paused";
-                    lvi.ImageIndex = 2;*/
-                    //UpdateListViewItem(vm.Guid);
+                        pauseResumeToolStripMenuItem.Text = "Resume";
+                        btnPauseResume.Text = "Resume";
+                        pauseResumeToolStripMenuItem.ToolTipText = "Resume this virtual machine";
+                        toolTip.SetToolTip(btnPauseResume, "Resume this virtual machine");
+                        btnStartStop.Enabled = true;
+                        btnStartStop.Text = "Stop";
+                        startStopToolStripMenuItem.Text = "Stop";
+                        startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
+                        toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
+                        btnConfigure.Enabled = true;
 
-                    VMCountRefresh();
+                        /*lvi.SubItems[1].Text = "Paused";
+                        lvi.ImageIndex = 2;*/
+                        //UpdateListViewItem(vm.Guid);
+
+                        VMCountRefresh();
+                    }
                 }
                 else if (m.WParam.ToInt32() == 0) //VM was resumed
                 {
                     VirtualMachine vm = GetByHandle(m.LParam);
-                    vm.State = VMState.Running;
 
-                    pauseResumeToolStripMenuItem.Text = "Pause";
-                    btnPauseResume.Text = "Pause";
-                    toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
-                    pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
-                    btnStartStop.Enabled = true;
-                    btnStartStop.Text = "Stop";
-                    toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
-                    startStopToolStripMenuItem.Text = "Stop";
-                    startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
-                    btnConfigure.Enabled = true;
+                    if (vm != null)
+                    {
+                        vm.State = VMState.Running;
 
-                    /*lvi.SubItems[1].Text = "Running";
-                    lvi.ImageIndex = 1;*/
-                    //UpdateListViewItem(vm.Guid);
+                        pauseResumeToolStripMenuItem.Text = "Pause";
+                        btnPauseResume.Text = "Pause";
+                        toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
+                        pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
+                        btnStartStop.Enabled = true;
+                        btnStartStop.Text = "Stop";
+                        toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
+                        startStopToolStripMenuItem.Text = "Stop";
+                        startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
+                        btnConfigure.Enabled = true;
 
-                    VMCountRefresh();
+                        /*lvi.SubItems[1].Text = "Running";
+                        lvi.ImageIndex = 1;*/
+                        //UpdateListViewItem(vm.Guid);
+
+                        VMCountRefresh();
+                    }
                 }
             }
             if (m.Msg == 0x8896)
@@ -972,105 +1002,118 @@ namespace _86BM2
                 if (m.WParam.ToInt32() == 1)  //A dialog was opened
                 {
                     VirtualMachine vm = GetByHandle(m.LParam);
-                    vm.State = VMState.Waiting;
 
-                    btnStartStop.Enabled = false;
-                    btnStartStop.Text = "Stop";
-                    toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
-                    startStopToolStripMenuItem.Text = "Stop";
-                    startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
-                    btnEdit.Enabled = false;
-                    btnDelete.Enabled = false;
-                    btnConfigure.Enabled = false;
-                    btnReset.Enabled = false;
-                    btnPauseResume.Enabled = false;
-                    btnCtrlAltDel.Enabled = false;
+                    if (vm != null)
+                    {
+                        vm.State = VMState.Waiting;
 
-                    /*lvi.SubItems[1].Text = "Waiting";
-                    lvi.ImageIndex = 2;*/
-                    //UpdateListViewItem(vm.Guid);
+                        btnStartStop.Enabled = false;
+                        btnStartStop.Text = "Stop";
+                        toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
+                        startStopToolStripMenuItem.Text = "Stop";
+                        startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
+                        btnEdit.Enabled = false;
+                        btnDelete.Enabled = false;
+                        btnConfigure.Enabled = false;
+                        btnReset.Enabled = false;
+                        btnPauseResume.Enabled = false;
+                        btnCtrlAltDel.Enabled = false;
 
-                    VMCountRefresh();
+                        /*lvi.SubItems[1].Text = "Waiting";
+                        lvi.ImageIndex = 2;*/
+                        //UpdateListViewItem(vm.Guid);
+
+                        VMCountRefresh();
+                    }
                 }
                 else if (m.WParam.ToInt32() == 0) //A dialog was closed
                 {
                     VirtualMachine vm = GetByHandle(m.LParam);
-                    vm.State = VMState.Running;
 
-                    btnStartStop.Enabled = true;
-                    btnStartStop.Text = "Stop";
-                    toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
-                    startStopToolStripMenuItem.Text = "Stop";
-                    startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
-                    btnEdit.Enabled = false;
-                    btnDelete.Enabled = false;
-                    btnConfigure.Enabled = true;
-                    btnReset.Enabled = true;
-                    btnPauseResume.Enabled = true;
-                    btnPauseResume.Text = "Pause";
-                    pauseResumeToolStripMenuItem.Text = "Pause";
-                    pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
-                    toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
-                    btnCtrlAltDel.Enabled = true;
+                    if (vm != null)
+                    {
+                        vm.State = VMState.Running;
 
-                    /*lvi.SubItems[1].Text = "Running";
-                    lvi.ImageIndex = 1;*/
-                    //UpdateListViewItem(vm.Guid);
+                        btnStartStop.Enabled = true;
+                        btnStartStop.Text = "Stop";
+                        toolTip.SetToolTip(btnStartStop, "Stop this virtual machine");
+                        startStopToolStripMenuItem.Text = "Stop";
+                        startStopToolStripMenuItem.ToolTipText = "Stop this virtual machine";
+                        btnEdit.Enabled = false;
+                        btnDelete.Enabled = false;
+                        btnConfigure.Enabled = true;
+                        btnReset.Enabled = true;
+                        btnPauseResume.Enabled = true;
+                        btnPauseResume.Text = "Pause";
+                        pauseResumeToolStripMenuItem.Text = "Pause";
+                        pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
+                        toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
+                        btnCtrlAltDel.Enabled = true;
 
-                    VMCountRefresh();
+                        /*lvi.SubItems[1].Text = "Running";
+                        lvi.ImageIndex = 1;*/
+                        //UpdateListViewItem(vm.Guid);
+
+                        VMCountRefresh();
+                    }
                 }
             }
             if (m.Msg == 0x8897) //Shutdown confirmed
             {
                 VirtualMachine vm = GetByHandle(m.LParam);
-                vm.State = VMState.Stopped;
-                vm.Handle = IntPtr.Zero;
-                vm.ProcessID = -1;
 
-                /*lvi.SubItems[1].Text = vm.GetStatusString();
-                lvi.ImageIndex = 0;*/
-                //UpdateListViewItem(vm.Guid);
 
-                btnStartStop.Text = "Start";
-                startStopToolStripMenuItem.Text = "Start";
-                startStopToolStripMenuItem.ToolTipText = "Start this virtual machine";
-                toolTip.SetToolTip(btnStartStop, "Start this virtual machine");
-                btnPauseResume.Text = "Pause";
-                pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
-                pauseResumeToolStripMenuItem.Text = "Pause";
-                toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
-                if (lstVMs.SelectedItems.Count == 1)
+                if (vm != null)
                 {
-                    btnEdit.Enabled = true;
-                    btnDelete.Enabled = true;
-                    btnStartStop.Enabled = true;
-                    btnConfigure.Enabled = true;
-                    btnPauseResume.Enabled = false;
-                    btnReset.Enabled = false;
-                    btnCtrlAltDel.Enabled = false;
-                }
-                else if (lstVMs.SelectedItems.Count == 0)
-                {
-                    btnEdit.Enabled = false;
-                    btnDelete.Enabled = false;
-                    btnStartStop.Enabled = false;
-                    btnConfigure.Enabled = false;
-                    btnPauseResume.Enabled = false;
-                    btnReset.Enabled = false;
-                    btnCtrlAltDel.Enabled = false;
-                }
-                else
-                {
-                    btnEdit.Enabled = false;
-                    btnDelete.Enabled = true;
-                    btnStartStop.Enabled = false;
-                    btnConfigure.Enabled = false;
-                    btnPauseResume.Enabled = false;
-                    btnReset.Enabled = false;
-                    btnCtrlAltDel.Enabled = false;
-                }
+                    vm.State = VMState.Stopped;
+                    vm.Handle = IntPtr.Zero;
+                    vm.ProcessID = -1;
 
-                VMCountRefresh();
+                    /*lvi.SubItems[1].Text = vm.GetStatusString();
+                    lvi.ImageIndex = 0;*/
+                    //UpdateListViewItem(vm.Guid);
+
+                    btnStartStop.Text = "Start";
+                    startStopToolStripMenuItem.Text = "Start";
+                    startStopToolStripMenuItem.ToolTipText = "Start this virtual machine";
+                    toolTip.SetToolTip(btnStartStop, "Start this virtual machine");
+                    btnPauseResume.Text = "Pause";
+                    pauseResumeToolStripMenuItem.ToolTipText = "Pause this virtual machine";
+                    pauseResumeToolStripMenuItem.Text = "Pause";
+                    toolTip.SetToolTip(btnPauseResume, "Pause this virtual machine");
+                    if (lstVMs.SelectedItems.Count == 1)
+                    {
+                        btnEdit.Enabled = true;
+                        btnDelete.Enabled = true;
+                        btnStartStop.Enabled = true;
+                        btnConfigure.Enabled = true;
+                        btnPauseResume.Enabled = false;
+                        btnReset.Enabled = false;
+                        btnCtrlAltDel.Enabled = false;
+                    }
+                    else if (lstVMs.SelectedItems.Count == 0)
+                    {
+                        btnEdit.Enabled = false;
+                        btnDelete.Enabled = false;
+                        btnStartStop.Enabled = false;
+                        btnConfigure.Enabled = false;
+                        btnPauseResume.Enabled = false;
+                        btnReset.Enabled = false;
+                        btnCtrlAltDel.Enabled = false;
+                    }
+                    else
+                    {
+                        btnEdit.Enabled = false;
+                        btnDelete.Enabled = true;
+                        btnStartStop.Enabled = false;
+                        btnConfigure.Enabled = false;
+                        btnPauseResume.Enabled = false;
+                        btnReset.Enabled = false;
+                        btnCtrlAltDel.Enabled = false;
+                    }
+
+                    VMCountRefresh();
+                }
             }
             //This is the WM_COPYDATA message, used here to pass command line args to an already running instance
             //NOTE: This code will have to be modified in case more command line arguments are added in the future.
@@ -1383,7 +1426,7 @@ namespace _86BM2
 
             foreach (ListViewItem lvi in lstVMs.Items)
             {
-                VirtualMachine vm = (VirtualMachine)lvi.Tag;
+                VirtualMachine vm = GetById((int)lvi.Tag);
                 switch (vm.State)
                 {
                     case VMState.Paused: pausedVMs++; break;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using static _86BM2.VMManager;
 
 namespace _86BM2
 {
@@ -17,7 +18,7 @@ namespace _86BM2
         //Check if VM with this name already exists, and send the data to the main form for processing if it doesn't
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (main.VMCheckIfExists(txtName.Text))
+            /*if (main.VMCheckIfExists(txtName.Text))
             {
                 MessageBox.Show("A virtual machine with this name already exists. Please pick a different name.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -31,16 +32,19 @@ namespace _86BM2
             {
                 MessageBox.Show("If you wish to import VM files, you must specify a path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
-            }
+            }*/
+            string path = Path.Combine(exeDir, "86Box VMs", txtName.Text);
+            VirtualMachine vm = new VirtualMachine(txtName.Text, txtDescription.Text, path, false, "", false, false, false, false, false);
+            Add(vm);
 
-            if (existingVM)
+            /*if (existingVM)
             {
                 main.VMImport(txtName.Text, txtDescription.Text, txtImportPath.Text, cbxOpenCFG.Checked, cbxStartVM.Checked);
             }
             else
             {
                 main.VMAdd(txtName.Text, txtDescription.Text, cbxOpenCFG.Checked, cbxStartVM.Checked);
-            }
+            }*/
             Close();
         }
 

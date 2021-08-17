@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Windows.Forms;
 using static _86BM2.Interop;
@@ -15,11 +16,14 @@ namespace _86BM2
         private BackgroundWorker worker;
 
         public int Id { get; set; }
+        [JsonIgnore]
         public IntPtr Handle { get; set; } //Window handle for the main 86Box window once it's started
         public string Name { get; set; }
         public string Description { get; set; }
         public string Path { get; set; } //Full path of the VM folder
+        [JsonIgnore]
         public VMState State { get; set; } //Current state of the VM
+        [JsonIgnore]
         public int ProcessID { get; set; } //Process ID of 86box.exe running the VM
         public bool EnableLogging { get; set; } //Enable 86Box logging to file
         public string LogPath { get; set; } //Path where the log file will be saved
@@ -34,7 +38,7 @@ namespace _86BM2
             Random rand = new Random();
             Id = rand.Next();
 
-            while (GetById(Id) != null)
+            while (CheckId(Id))
                 Id = rand.Next();
 
             Name = "New virtual machine";
@@ -103,9 +107,10 @@ namespace _86BM2
                 frmMain mainForm = (frmMain)Application.OpenForms["frmMain"]; //Instance of frmMain
 
                 Process p = new Process();
-                p.StartInfo.FileName = "";//Settings.CurrentSettings.ExePath;
+                p.StartInfo.FileName = @"C:\Users\David\Desktop\86Box\86Box.exe";//Settings.CurrentSettings.ExePath;
 
-                StringBuilder sb = new StringBuilder($"-P \"{Path}\" -H {Id},{mainForm.handle}");
+                string idString = string.Format("{0:X}", Id).PadLeft(16, '0');
+                StringBuilder sb = new StringBuilder($"-P \"{Path}\" -H {idString},{mainForm.handle}");
 
                 if (EnableLogging)
                     sb.Append($" -L \"{LogPath}\"");
@@ -122,15 +127,10 @@ namespace _86BM2
                 if (showSettings)
                     sb.Append(" -S");
 
+                Debug.WriteLine($"VirtualMachine.Start: arguments are {sb.ToString()}");
                 p.StartInfo.Arguments = sb.ToString();
                 p.Start();
                 ProcessID = p.Id;
-
-                //Wait while the new VM sends back its main window handle
-                while (Handle.Equals(IntPtr.Zero))
-                {
-                    Thread.Sleep(100);
-                }
 
                 State = VMState.Running;
 
