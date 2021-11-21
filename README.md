@@ -1,5 +1,7 @@
 # 86BM2
-This is an unofficial 2.0 release of 86Box Manager based on last official version (1.7.2).
+This is an unofficial 2.0 release of 86Box Manager based on last official version (1.7.2). 
+
+**PLEASE NOTE: This is still under development and is not in a usable state yet.**
 
 Changes:
 * Ported to .NET 5
