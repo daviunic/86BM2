@@ -204,7 +204,7 @@ namespace _86BM2
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            dlgAddVM dlg = new dlgAddVM();
+            dlgNewVM dlg = new dlgNewVM();
             dlg.ShowDialog();
             dlg.Dispose();
         }

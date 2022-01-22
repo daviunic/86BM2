@@ -5,17 +5,18 @@ using static _86BM2.VMManager;
 
 namespace _86BM2
 {
-    public partial class dlgAddVM : Form
+    public partial class dlgNewVM : Form
     {
         private frmMain main = (frmMain)Application.OpenForms["frmMain"]; //Instance of frmMain
-        private bool existingVM = false; //Is this importing an existing VM or not
 
-        public dlgAddVM()
+        public dlgNewVM()
         {
             InitializeComponent();
         }
 
-        //Check if VM with this name already exists, and send the data to the main form for processing if it doesn't
+        /* Confirm creating a new VM
+         * TODO: Notify the main form so it refreshes the VM listview
+         */
         private void btnAdd_Click(object sender, EventArgs e)
         {
             /*if (main.VMCheckIfExists(txtName.Text))
@@ -36,7 +37,6 @@ namespace _86BM2
             string path = Path.Combine(exeDir, "86Box VMs", txtName.Text);
             VirtualMachine vm = new VirtualMachine(txtName.Text, txtDescription.Text, path, false, "", false, false, false, false, false);
             Add(vm);
-
             /*if (existingVM)
             {
                 main.VMImport(txtName.Text, txtDescription.Text, txtImportPath.Text, cbxOpenCFG.Checked, cbxStartVM.Checked);
@@ -50,12 +50,12 @@ namespace _86BM2
 
         private void dlgAddVM_Load(object sender, EventArgs e)
         {
-            lblPath1.Text = main.cfgpath;
+            //lblPath1.Text = main.cfgpath;
         }
 
         private void txtName_TextChanged(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtName.Text))
+            /*if (string.IsNullOrWhiteSpace(txtName.Text))
             {
                 btnAdd.Enabled = false;
                 tipTxtName.Active = false;
@@ -75,15 +75,15 @@ namespace _86BM2
                     lblPath1.Text = main.cfgpath + txtName.Text;
                     tipLblPath1.SetToolTip(lblPath1, main.cfgpath + txtName.Text);
                 }
-            }
+            }*/
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog dialog = new FolderBrowserDialog
+            /*FolderBrowserDialog dialog = new FolderBrowserDialog
             {
                 RootFolder = Environment.SpecialFolder.MyComputer,
-                Description = "Select a folder where your virtual machines (configs, nvr folders, etc.) will be located",
+                Description = "Select a folder where your virtual machine (configs, nvr folders, etc.) will be located",
                 UseDescriptionForTitle = true
             };
 
@@ -91,14 +91,14 @@ namespace _86BM2
             {
                 txtImportPath.Text = dialog.SelectedPath;
                 txtName.Text = Path.GetFileName(dialog.SelectedPath);
-            }
+            }*/
         }
 
         private void cbxImport_CheckedChanged(object sender, EventArgs e)
         {
-            existingVM = !existingVM;
+            /*existingVM = !existingVM;
             txtImportPath.Enabled = cbxImport.Checked;
-            btnBrowse.Enabled = cbxImport.Checked;
+            btnBrowse.Enabled = cbxImport.Checked;*/
         }
     }
 }

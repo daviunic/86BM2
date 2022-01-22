@@ -88,7 +88,6 @@ namespace _86BM2
         {
             VMs.Add(vm);
             Save();
-            //Also write the change to vmlist.json file!
         }
 
         /// <summary>
