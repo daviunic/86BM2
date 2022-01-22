@@ -127,7 +127,7 @@ namespace _86BM2
                 if (showSettings)
                     sb.Append(" -S");
 
-                Debug.WriteLine($"VirtualMachine.Start: arguments are {sb.ToString()}");
+                Debug.WriteLine($"VirtualMachine.Start: arguments are {sb}");
                 p.StartInfo.Arguments = sb.ToString();
                 p.Start();
                 ProcessID = p.Id;

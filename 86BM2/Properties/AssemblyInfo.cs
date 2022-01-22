@@ -10,7 +10,7 @@ using System.Runtime.Versioning;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("David Simunič and others")]
 [assembly: AssemblyProduct("86BM2")]
-[assembly: AssemblyCopyright("Copyright © 2018-2021 David Simunič and others")]
+[assembly: AssemblyCopyright("Copyright © 2018-2022 David Simunič and others")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: SupportedOSPlatform("windows")]
