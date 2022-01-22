@@ -324,6 +324,7 @@ namespace _86BM2
                 //Finds the 86Box process associated with the VM and waits for it to exit
                 Process p = Process.GetProcessById(ProcessID);
                 p.WaitForExit();
+                
                 p.Close();
             }
             catch (Exception)
@@ -344,6 +345,10 @@ namespace _86BM2
                 Handle = IntPtr.Zero;
                 ProcessID = -1;
                 State = VMState.Stopped;
+
+                //Need to update the main form UI as well
+                frmMain mainForm = (frmMain)Application.OpenForms["frmMain"];
+                mainForm.RefreshUI();
             }
         }
     }

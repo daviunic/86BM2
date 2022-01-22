@@ -1408,7 +1408,7 @@ namespace _86BM2
         }
 
         //Refreshes the UI - VM list, VM count in statusbar...
-        private void RefreshUI()
+        internal void RefreshUI()
         {
             int runningVMs = 0;
             int pausedVMs = 0;
