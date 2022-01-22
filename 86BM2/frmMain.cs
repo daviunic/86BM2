@@ -12,19 +12,19 @@ namespace _86BM2
 {
     public partial class frmMain : Form
     {
-        private static RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true); //Registry key for accessing the settings and VM list
+        //private static RegistryKey regkey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\86Box", true); //Registry key for accessing the settings and VM list
         public string exepath = ""; //Path to 86box.exe and the romset
         public string cfgpath = ""; //Path to the virtual machines folder (configs, nvrs, etc.)
         public string handle = "";  //Window handle of this window  
-        private bool minimize = false; //Minimize the main window when a VM is started?
-        private bool showConsole = true; //Show the console window when a VM is started?
+        /*private bool minimize = false; //Minimize the main window when a VM is started?
+        private bool showConsole = true; //Show the console window when a VM is started?*/
         private bool minimizeTray = false; //Minimize the Manager window to tray icon?
         private bool closeTray = false; //Close the Manager Window to tray icon?
-        private int sortColumn = 0; //The column for sorting
+        /*private int sortColumn = 0; //The column for sorting
         private SortOrder sortOrder = SortOrder.Ascending; //Sorting order
         private int launchTimeout = 5000; //Timeout for waiting for 86Box.exe to initialize
         private string logpath = ""; //Path to log file
-        private bool gridlines = false; //Are grid lines enabled for VM list?
+        private bool gridlines = false; //Are grid lines enabled for VM list?*/
 
         public frmMain()
         {
@@ -40,19 +40,8 @@ namespace _86BM2
             Debug.WriteLine($"frmMain_Load: handle = {handle}");
 
             VMManager.Load();
-            lstVMs.Items.Clear();
-            foreach (VirtualMachine vm in VMs)
-            {
-                ListViewItem newLvi = new ListViewItem(vm.Name)
-                {
-                    Tag = vm.Id,
-                    ImageIndex = 0
-                };
-                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, "Stopped"));
-                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Description));
-                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Path));
-                lstVMs.Items.Add(newLvi);
-            }
+            ReloadVMList();
+            
             /*LoadSettings();
 
             //Load main window's state, size and position
@@ -97,7 +86,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void btnConfigure_Click(object sender, EventArgs e)
@@ -109,7 +98,7 @@ namespace _86BM2
                     vm.Configure();
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void btnSettings_Click(object sender, EventArgs e)
@@ -202,11 +191,12 @@ namespace _86BM2
             }
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void btnNew_Click(object sender, EventArgs e)
         {
             dlgNewVM dlg = new dlgNewVM();
             dlg.ShowDialog();
             dlg.Dispose();
+            RefreshUI();
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
@@ -500,7 +490,7 @@ namespace _86BM2
             else if (vm.State == VMState.Running)
                 vm.Pause();
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //Start VM if it's stopped or stop it if it's running/paused
@@ -517,7 +507,7 @@ namespace _86BM2
                 vm.RequestStop();
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void configureToolStripMenuItem_Click(object sender, EventArgs e)
@@ -529,7 +519,7 @@ namespace _86BM2
                     vm.Configure();
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //Opens the settings window for the selected VM
@@ -622,7 +612,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void hardResetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -640,7 +630,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //For double clicking an item, do something based on VM status
@@ -785,7 +775,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //Removes the selected VM. Confirmations for maximum safety
@@ -860,7 +850,7 @@ namespace _86BM2
                     Remove(vm.Id);
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
@@ -885,7 +875,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
@@ -903,7 +893,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void btnPauseResume_Click(object sender, EventArgs e)
@@ -920,7 +910,7 @@ namespace _86BM2
                 }
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //This function monitors received window messages
@@ -967,7 +957,7 @@ namespace _86BM2
                         lvi.ImageIndex = 2;*/
                         //UpdateListViewItem(vm.Guid);
 
-                        VMCountRefresh();
+                        RefreshUI();
                     }
                 }
                 else if (m.WParam.ToInt32() == 0) //VM was resumed
@@ -993,7 +983,7 @@ namespace _86BM2
                         lvi.ImageIndex = 1;*/
                         //UpdateListViewItem(vm.Guid);
 
-                        VMCountRefresh();
+                        RefreshUI();
                     }
                 }
             }
@@ -1023,7 +1013,7 @@ namespace _86BM2
                         lvi.ImageIndex = 2;*/
                         //UpdateListViewItem(vm.Guid);
 
-                        VMCountRefresh();
+                        RefreshUI();
                     }
                 }
                 else if (m.WParam.ToInt32() == 0) //A dialog was closed
@@ -1054,7 +1044,7 @@ namespace _86BM2
                         lvi.ImageIndex = 1;*/
                         //UpdateListViewItem(vm.Guid);
 
-                        VMCountRefresh();
+                        RefreshUI();
                     }
                 }
             }
@@ -1112,7 +1102,7 @@ namespace _86BM2
                         btnCtrlAltDel.Enabled = false;
                     }
 
-                    VMCountRefresh();
+                    RefreshUI();
                 }
             }
             //This is the WM_COPYDATA message, used here to pass command line args to an already running instance
@@ -1158,6 +1148,7 @@ namespace _86BM2
             }
         }
 
+        //Problem in .NET, need to find a way to reimplement this...
         private void createADesktopShortcutToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -1183,7 +1174,7 @@ namespace _86BM2
                     Remove((int)lvi.Tag);
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         private void trayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -1268,7 +1259,7 @@ namespace _86BM2
                     vm.Kill();
             }
 
-            VMCountRefresh();
+            RefreshUI();
         }
 
         //Sort the VM list by specified column and order
@@ -1416,8 +1407,8 @@ namespace _86BM2
             dc.Dispose();*/
         }
 
-        //Refreshes the VM counter in the status bar
-        private void VMCountRefresh()
+        //Refreshes the UI - VM list, VM count in statusbar...
+        private void RefreshUI()
         {
             int runningVMs = 0;
             int pausedVMs = 0;
@@ -1429,14 +1420,52 @@ namespace _86BM2
                 VirtualMachine vm = GetById((int)lvi.Tag);
                 switch (vm.State)
                 {
-                    case VMState.Paused: pausedVMs++; break;
-                    case VMState.Running: runningVMs++; break;
-                    case VMState.Stopped: stoppedVMs++; break;
-                    case VMState.Waiting: waitingVMs++; break;
+                    case VMState.Paused: 
+                        {
+                            pausedVMs++; 
+                            lvi.SubItems[1].Text = "Paused";
+                            lvi.ImageIndex = 2;
+                        } break;
+                    case VMState.Running: 
+                        { 
+                            runningVMs++;
+                            lvi.SubItems[1].Text = "Running";
+                            lvi.ImageIndex = 1;
+                        } break;
+                    case VMState.Stopped:
+                        {
+                            stoppedVMs++;
+                            lvi.SubItems[1].Text = "Stopped";
+                            lvi.ImageIndex = 0;
+                        } break;
+                    case VMState.Waiting: 
+                        { 
+                            waitingVMs++;
+                            lvi.SubItems[1].Text = "Waiting";
+                            lvi.ImageIndex = 2;
+                        } break;
                 }
             }
 
             lblVMCount.Text = "All VMs: " + lstVMs.Items.Count + " | Running: " + runningVMs + " | Paused: " + pausedVMs + " | Waiting: " + waitingVMs + " | Stopped: " + stoppedVMs;
+        }
+
+        //Reloads the VM list after a VM is create or removed
+        private void ReloadVMList()
+        {
+            lstVMs.Items.Clear();
+            foreach (VirtualMachine vm in VMs)
+            {
+                ListViewItem newLvi = new ListViewItem(vm.Name)
+                {
+                    Tag = vm.Id,
+                    ImageIndex = 0
+                };
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, "Stopped"));
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Description));
+                newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Path));
+                lstVMs.Items.Add(newLvi);
+            }
         }
 
         private void openConfigFileToolStripMenuItem_Click(object sender, EventArgs e)

@@ -14,9 +14,7 @@ namespace _86BM2
             InitializeComponent();
         }
 
-        /* Confirm creating a new VM
-         * TODO: Notify the main form so it refreshes the VM listview
-         */
+        //Confirm creating a new VM
         private void btnAdd_Click(object sender, EventArgs e)
         {
             /*if (main.VMCheckIfExists(txtName.Text))
@@ -35,7 +33,7 @@ namespace _86BM2
                 return;
             }*/
             string path = Path.Combine(exeDir, "86Box VMs", txtName.Text);
-            VirtualMachine vm = new VirtualMachine(txtName.Text, txtDescription.Text, path, false, "", false, false, false, false, false);
+            VirtualMachine vm = new VirtualMachine(txtName.Text, "", path, false, "", false, false, false, false, false);
             Add(vm);
             /*if (existingVM)
             {

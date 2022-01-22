@@ -30,11 +30,10 @@
         {
             this.cbxOpenCFG = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnCreate = new System.Windows.Forms.Button();
             this.lblName = new System.Windows.Forms.Label();
             this.lblDesc = new System.Windows.Forms.Label();
             this.txtName = new System.Windows.Forms.TextBox();
-            this.txtDescription = new System.Windows.Forms.TextBox();
             this.lblPath = new System.Windows.Forms.Label();
             this.cbxStartVM = new System.Windows.Forms.CheckBox();
             this.pnlBottom = new System.Windows.Forms.Panel();
@@ -66,20 +65,20 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // btnAdd
+            // btnCreate
             // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnAdd.Enabled = false;
-            this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnAdd.Location = new System.Drawing.Point(549, 14);
-            this.btnAdd.Margin = new System.Windows.Forms.Padding(2);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(81, 38);
-            this.btnAdd.TabIndex = 7;
-            this.btnAdd.Text = "Add";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnCreate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCreate.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnCreate.Enabled = false;
+            this.btnCreate.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnCreate.Location = new System.Drawing.Point(549, 14);
+            this.btnCreate.Margin = new System.Windows.Forms.Padding(2);
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.Size = new System.Drawing.Size(81, 38);
+            this.btnCreate.TabIndex = 7;
+            this.btnCreate.Text = "Create";
+            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreate.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // lblName
             // 
@@ -112,16 +111,6 @@
             this.txtName.TabIndex = 3;
             this.txtName.TextChanged += new System.EventHandler(this.txtName_TextChanged);
             // 
-            // txtDescription
-            // 
-            this.txtDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtDescription.Location = new System.Drawing.Point(120, 138);
-            this.txtDescription.Margin = new System.Windows.Forms.Padding(2);
-            this.txtDescription.Name = "txtDescription";
-            this.txtDescription.Size = new System.Drawing.Size(595, 27);
-            this.txtDescription.TabIndex = 4;
-            // 
             // lblPath
             // 
             this.lblPath.AutoSize = true;
@@ -148,7 +137,7 @@
             // 
             this.pnlBottom.BackColor = System.Drawing.SystemColors.Control;
             this.pnlBottom.Controls.Add(this.btnCancel);
-            this.pnlBottom.Controls.Add(this.btnAdd);
+            this.pnlBottom.Controls.Add(this.btnCreate);
             this.pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlBottom.Location = new System.Drawing.Point(0, 264);
             this.pnlBottom.Margin = new System.Windows.Forms.Padding(2);
@@ -158,7 +147,7 @@
             // 
             // dlgNewVM
             // 
-            this.AcceptButton = this.btnAdd;
+            this.AcceptButton = this.btnCreate;
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.White;
@@ -168,7 +157,6 @@
             this.Controls.Add(this.cbxStartVM);
             this.Controls.Add(this.cbxOpenCFG);
             this.Controls.Add(this.lblPath);
-            this.Controls.Add(this.txtDescription);
             this.Controls.Add(this.txtName);
             this.Controls.Add(this.lblDesc);
             this.Controls.Add(this.lblName);
@@ -191,11 +179,10 @@
         #endregion
         private System.Windows.Forms.CheckBox cbxOpenCFG;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Button btnCreate;
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.Label lblDesc;
         private System.Windows.Forms.TextBox txtName;
-        private System.Windows.Forms.TextBox txtDescription;
         private System.Windows.Forms.Label lblPath;
         private System.Windows.Forms.CheckBox cbxStartVM;
         private System.Windows.Forms.Panel pnlBottom;

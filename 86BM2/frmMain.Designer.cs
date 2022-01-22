@@ -326,7 +326,7 @@
             this.btnNew.Text = "New";
             this.toolTip.SetToolTip(this.btnNew, "Add a new or an existing virtual machine");
             this.btnNew.UseVisualStyleBackColor = true;
-            this.btnNew.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
             // 
             // btnConfigure
             // 
