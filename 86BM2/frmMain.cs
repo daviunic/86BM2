@@ -40,7 +40,7 @@ namespace _86BM2
             Debug.WriteLine($"frmMain_Load: handle = {handle}");
 
             VMManager.Load();
-            ReloadVMList();
+            ReloadVMList();           
             
             /*LoadSettings();
 
@@ -196,7 +196,7 @@ namespace _86BM2
             dlgNewVM dlg = new dlgNewVM();
             dlg.ShowDialog();
             dlg.Dispose();
-            RefreshUI();
+            ReloadVMList();
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
@@ -775,7 +775,7 @@ namespace _86BM2
                 }
             }
 
-            RefreshUI();
+            ReloadVMList();
         }
 
         //Removes the selected VM. Confirmations for maximum safety
@@ -1466,6 +1466,8 @@ namespace _86BM2
                 newLvi.SubItems.Add(new ListViewItem.ListViewSubItem(newLvi, vm.Path));
                 lstVMs.Items.Add(newLvi);
             }
+
+            RefreshUI();
         }
 
         private void openConfigFileToolStripMenuItem_Click(object sender, EventArgs e)

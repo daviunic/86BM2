@@ -235,7 +235,10 @@ namespace _86BM2
                 SetForegroundWindow(Handle);
             }
             else if (State == VMState.Stopped)
+            {
                 Start(true);
+                State = VMState.Waiting;
+            }
         }
 
         /// <summary>
